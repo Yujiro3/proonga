@@ -43,6 +43,7 @@ typedef struct {
  * クラスの宣言・登録部分
  */
 PHP_METHOD(GCommand, __construct);
+PHP_METHOD(GCommand, __destruct);
 PHP_METHOD(GCommand, __set);
 PHP_METHOD(GCommand, exec);
 
@@ -52,7 +53,10 @@ ZEND_BEGIN_ARG_INFO_EX(GCommand___construct, 1, ZEND_RETURN_VALUE, 2)
     ZEND_ARG_INFO(0, command)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(GCommand___set, 0, ZEND_RETURN_VALUE, 0)
+ZEND_BEGIN_ARG_INFO_EX(GCommand__destruct, 0, ZEND_RETURN_VALUE, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(GCommand___set, 0, ZEND_RETURN_VALUE, 2)
     ZEND_ARG_INFO(0, key)
     ZEND_ARG_INFO(0, value)
 ZEND_END_ARG_INFO()
@@ -71,6 +75,7 @@ extern zend_function_entry groonga_command_class_methods[];
  */
 zend_function_entry groonga_command_class_methods[] = {
     PHP_ME(GCommand, __construct, GCommand___construct, ZEND_ACC_CTOR | ZEND_ACC_PUBLIC)
+    PHP_ME(GCommand, __destruct,  GCommand__destruct,   ZEND_ACC_DTOR | ZEND_ACC_PUBLIC)
     PHP_ME(GCommand, __set,       GCommand___set,       ZEND_ACC_PUBLIC)
     PHP_ME(GCommand, exec,        GCommand_exec,        ZEND_ACC_PUBLIC)
 
@@ -114,6 +119,26 @@ PHP_METHOD(GCommand, __construct)
 }
 
 /**
+ * デストラクタ
+ *
+ * @access public
+ * @return void
+ */
+PHP_METHOD(GCommand, __destruct)
+{
+    groonga_command_t *self;
+
+    /* 引数の受け取り */
+    if (zend_parse_parameters_none() != SUCCESS) {
+        RETURN_FALSE;
+    }
+    self = (groonga_command_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
+
+    grn_obj_unlink(self->ctx, self->command);
+}
+
+
+/**
  * 変数設定
  *
  * @access public
@@ -127,7 +152,6 @@ PHP_METHOD(GCommand, __set)
     char *key, *value;
     uint key_len, value_len;
     grn_obj *expr_var = NULL;
-    grn_rc result;
 
     /* 引数の受け取り */
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss", &key, &key_len, &value, &value_len) == FAILURE) {
@@ -172,8 +196,14 @@ PHP_METHOD(GCommand, exec)
     }
     self = (groonga_command_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
-    grn_expr_exec(self->ctx, self->command, 0);
-    grn_ctx_info_get(self->ctx, &info);
+    /* コマンドの実行 */
+    if (GRN_SUCCESS != grn_expr_exec(self->ctx, self->command, 0)) {
+        RETURN_FALSE;
+    }
+
+    if (GRN_SUCCESS != grn_ctx_info_get(self->ctx, &info)) {
+        RETURN_FALSE;
+    }
 
     /* 出力タイプ分岐 */
     if (assoc) {

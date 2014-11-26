@@ -34,124 +34,181 @@ $grn = new Groonga('./db/test.db');
 ### テーブルの作成 ###
 
 ```php
-/**
- * table_createコマンド
- */
-$table_create = $gdb->command('table_create');
-
 /* table_create --name Users --flags TABLE_HASH_KEY --key_type ShortText */
-$table_create->name     = 'Users';
-$table_create->flags    = 'TABLE_HASH_KEY';
-$table_create->key_type = 'ShortText';
-$table_create->exec();
+$Users = $grn->table(
+    'Users', 
+    Groonga::TABLE_HASH_KEY | Groonga::PERSISTENT,
+    'ShortText'
+);
 ```
 
 ### カラムの作成 ###
 
 ```php
-/**
- * column_createコマンド
- */
-$column_create = $gdb->command('column_create');
-
 /* column_create --table Users --name name --flags COLUMN_SCALAR --type ShortText */
-$column_create->table = 'Users';
-$column_create->name  = 'name';
-$column_create->flags = 'COLUMN_SCALAR';
-$column_create->type  = 'ShortText';
-$column_create->exec();
+$name = $Users->column(
+    'name', 
+    Groonga::COLUMN_SCALAR | Groonga::PERSISTENT,
+    'ShortText'
+);
+
+/* column_create --table Users --name location_str --flags COLUMN_SCALAR --type ShortText */
+$location_str = $Users->column(
+    'location_str', 
+    Groonga::COLUMN_SCALAR | Groonga::PERSISTENT,
+    'ShortText'
+);
 
 ```
 
 ### データのロード ###
 
 ```php
-/**
- * column_createコマンド
- */
-$load = $gdb->command('load');
+$data = array(
+    array(
+        "_key"=> "daijiro",
+        "name"=> "hsiomaneki",
+        "location"=> "127678039x502643091",
+        "location_str"=> "神奈川県",
+        "description"=> "groonga developer"
+    ),
+    array(
+        "_key"=> "tasukuchan",
+        "name"=> "グニャラくん",
+        "location"=> "128423343x502929252",
+        "location_str"=> "東京都渋谷区",
+        "description"=> "エロいおっさん"
+    ),
+    array(
+        "_key"=> "OffGao",
+        "name"=> "OffGao",
+        "location"=> "128544408x502801502",
+        "location_str"=> "東京都中野区",
+        "description"=> "がおがお"
+    ),
+);
 
-/* load --table Users --values [[...],[...],...] */
-$load->table  = 'Users';
-$load->values = <<< JSON
-[
-  {
-    "_key": "alice",
-    "name": "Alice",
-    "follower": ["bob"],
-    "favorites": [],
-    "location": "152489000x-255829000",
-    "location_str": "Boston, Massachusetts",
-    "description": "Groonga developer"
-  },
-  {
-    "_key": "bob",
-    "name": "Bob",
-    "follower": ["alice","charlie"],
-    "favorites": ["alice:1","charlie:1"],
-    "location": "146249000x-266228000",
-    "location_str": "Brooklyn, New York City",
-    "description": ""
-  },
-  {
-    "_key": "charlie",
-    "name": "Charlie",
-    "follower": ["alice","bob"],
-    "favorites": ["alice:1","bob:1"],
-    "location": "146607190x-267021260",
-    "location_str": "Newark, New Jersey",
-    "description": "Hmm,Hmm"
-  }
-]
-JSON;
-$load->exec();
+$Users->load($data);
+
 ```
 
 ### データ一覧の取得 ###
 
 ```php
-/**
- * selectコマンド
- */
-$select = $gdb->command('select');
-
-/* select --table Users --match_columns name,location_str,description --query "New York" --output_columns _key,name */
-$select->table          = 'Users';
-$select->match_columns  = 'name,location_str,description';
-$select->query          = '"New York"';
-$select->output_columns = '_key,name';
-$result = $select->exec(true);
-
-echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_BIGINT_AS_STRING);
+/* select --table Users */
+$cursor = $Users->select();
+while (0 != $cursor->next()) {
+    echo $cursor->getKey()." => \n";
+    $row = $cursor->getValue(true);
+    print_r($row);
+    echo ",\n";
+}
 ```
 
 ### 出力結果 ###
 
 ```    
-[
-    [
-        [
-            1
-        ],
-        [
-            [
-                "_key",
-                "ShortText"
-            ],
-            [
-                "name",
-                "ShortText"
-            ]
-        ],
-        [
-            "bob",
-            "Bob"
-        ]
-    ]
-]
+daijiro =>
+Array
+(
+    [description] => groonga developer
+    [location] => 127678039x502643091
+    [location_str] => 神奈川県
+    [name] => hsiomaneki
+),
+tasukuchan =>
+Array
+(
+    [description] => エロいおっさん
+    [location] => 128423343x502929252
+    [location_str] => 東京都渋谷区
+    [name] => グニャラくん
+),
+OffGao =>
+Array
+(
+    [description] => がおがお
+    [location] => 128544408x502801502
+    [location_str] => 東京都中野区
+    [name] => OffGao
+),
 
 ```
 
+
+### 検索データの取得 ###
+
+```php
+/* select --table Users --match_columns location_str,name --query 東京 */
+$cursor = $Users->select();
+$cursor->query('東京')->matchColumns->('location_str,name')->execute();
+while (0 != $cursor->next()) {
+    echo $cursor->getKey()." => \n";
+    $row = $cursor->getValue(true);
+    print_r($row);
+    echo ",\n";
+}
+```
+
+### 出力結果 ###
+
+```    
+2 =>
+Array
+(
+    [description] => エロいおっさん
+    [location] => 128423343x502929252
+    [location_str] => 東京都渋谷区
+    [name] => グニャラくん
+),
+3 =>
+Array
+(
+    [description] => がおがお
+    [location] => 128544408x502801502
+    [location_str] => 東京都中野区
+    [name] => OffGao
+),
+
+```
+
+
+### フィルタリングデータの取得 ###
+
+```php
+/* select --table Users --filter geo_in_circle(location,"128484216x502919856",5000) */
+$Users  = $grn->Users;
+$cursor = $Users->select()->filter('geo_in_circle(location,"128484216x502919856",5000)');
+$row = $cursor->execute();
+while (0 != $cursor->next()) {
+    echo $cursor->getKey()." => \n";
+    $row = $cursor->getValue(true);
+    print_r($row);
+    echo ",\n";
+}
+```
+
+### 出力結果 ###
+
+```    
+2 =>
+Array
+(
+    [description] => エロいおっさん
+    [location] => 128423343x502929252
+    [location_str] => 東京都渋谷区
+    [name] => グニャラくん
+),
+3 =>
+Array
+(
+    [description] => がおがお
+    [location] => 128544408x502801502
+    [location_str] => 東京都中野区
+    [name] => OffGao
+),
+
+```
     
     
 
