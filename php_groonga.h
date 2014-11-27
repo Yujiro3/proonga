@@ -98,13 +98,13 @@ ZEND_END_MODULE_GLOBALS(groonga)
 #   define GROONGA_G(v) (groonga_globals.v)
 #endif
 
-#ifndef HAVE_GROONGA_CLASS_GROONGA_H
+#ifndef HAVE_PROONGA_CLASS_GROONGA_H
 #   include "classes/groonga.h"
 #endif
 
-#ifndef HAVE_GROONGA_CLASS_COMMAND_H
+#ifndef HAVE_PROONGA_CLASS_COMMAND_H
 #   include "classes/command.h"
 #endif
 
-#endif    /* HAVE_PHP_PROONGA_H */
+#endif    /* HAVE_PHP_GROONGA_H */
 
