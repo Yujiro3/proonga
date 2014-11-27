@@ -27,8 +27,8 @@
  * @filesource
  */
 
-#ifndef HAVE_GROONGA_OBJECT
-#define HAVE_GROONGA_OBJECT
+#ifndef HAVE_PROONGA_OBJECT
+#define HAVE_PROONGA_OBJECT
 
 #include <groonga.h>
 #include "php.h"
@@ -37,7 +37,7 @@
 #   include "php_groonga.h"
 #endif
 
-#ifndef HAVE_GROONGA_OBJECT_H
+#ifndef HAVE_PROONGA_OBJECT_H
 #   include "src/object.h"
 #endif
 

@@ -26,8 +26,8 @@
  * @author          Yujiro Takahashi <yujiro3@gmail.com>
  * @filesource
  */
-#ifndef HAVE_PHP_GROONGA
-#define HAVE_PHP_GROONGA
+#ifndef HAVE_PHP_PROONGA
+#define HAVE_PHP_PROONGA
 
 #include <groonga.h>
 
@@ -38,6 +38,7 @@
 #include "php.h"
 #include "php_ini.h"
 #include "ext/standard/info.h"
+#include "ext/standard/php_string.h"
 #include "ext/json/php_json.h"
 #include "zend_exceptions.h"
 #include "zend_interfaces.h"
@@ -46,8 +47,12 @@
 #   include "php_groonga.h"
 #endif
 
-#ifndef HAVE_GROONGA_OBJECT_H
+#ifndef HAVE_PROONGA_OBJECT_H
 #   include "src/object.h"
+#endif
+
+#ifndef HAVE_PROONGA_COMMAND_H
+#   include "src/command.h"
 #endif
 
 /* If you declare any globals in php_groonga.h uncomment this:
@@ -197,11 +202,11 @@ PHP_MINFO_FUNCTION(groonga)
     php_info_print_table_end();
 }
 
-#ifndef HAVE_GROONGA_CLASS_GROONGA
+#ifndef HAVE_PROONGA_CLASS_GROONGA
 #   include "classes/groonga.h"
 #endif
 
-#ifndef HAVE_GROONGA_CLASS_COMMAND
+#ifndef HAVE_PROONGA_CLASS_COMMAND
 #   include "classes/command.h"
 #endif
 

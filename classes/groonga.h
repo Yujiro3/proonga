@@ -27,8 +27,8 @@
  * @filesource
  */
 
-#ifndef HAVE_GROONGA_CLASS_GROONGA_H
-#define HAVE_GROONGA_CLASS_GROONGA_H
+#ifndef HAVE_PROONGA_CLASS_GROONGA_H
+#define HAVE_PROONGA_CLASS_GROONGA_H
 
 /**
  * Groongaクラス::メンバー変数定義
@@ -83,8 +83,8 @@ ZEND_END_ARG_INFO()
 extern zend_function_entry groonga_class_methods[];
 
 #else
-#   ifndef HAVE_GROONGA_CLASS_GROONGA
-#   define HAVE_GROONGA_CLASS_GROONGA
+#   ifndef HAVE_PROONGA_CLASS_GROONGA
+#   define HAVE_PROONGA_CLASS_GROONGA
 
 /**
  * クラスの実装部分
@@ -162,7 +162,7 @@ PHP_METHOD(Groonga, __construct)
 }
 
 /**
- * コンストラクタ
+ * デストラクタ
  *
  * @access public
  * @return void
@@ -236,37 +236,27 @@ PHP_METHOD(Groonga, command)
  */
 PHP_METHOD(Groonga, status)
 {
-    zval *zcommand, *result, zstatus, zboolean;
-    groonga_command_t *gcommand;
+    groonga_t *self;
+    grn_obj *command;
 
     /* 引数の受け取り */
     if (zend_parse_parameters_none() != SUCCESS) {
         RETURN_FALSE;
     }
+    self = (groonga_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
-    /* オブジェクトを生成して初期化 */
-    MAKE_STD_ZVAL(zcommand);
-    object_init_ex(zcommand, groonga_command_ce);
+    /* コマンド取得 */
+    if (!proonga_command(self->ctx, &command, "status" TSRMLS_CC)) {
+        RETURN_FALSE;
+    }
 
-    /* $command->__construct($this, 'status') */
-    ZVAL_STRINGL(&zstatus, "status", strlen("status"), 0);
-    zend_call_method_with_2_params(
-        (zval **)&zcommand, Z_OBJCE_P(zcommand), 
-        NULL, "__construct", 
-        NULL, getThis(), &zstatus
-    );
+    /* コマンドの実行 */
+    if (!proonga_command_exec(self->ctx, command, return_value, 1 TSRMLS_CC)) {
+        RETURN_FALSE;
+    }
 
-    /* $command->exec(true) */
-    ZVAL_BOOL(&zboolean, 1);
-    zend_call_method_with_1_params(
-        (zval **)&zcommand, Z_OBJCE_P(zcommand), 
-        NULL, "exec", 
-        &result, &zboolean
-    );
-
-    zval_ptr_dtor(&zcommand);
-
-    RETURN_ZVAL(result, 1, 0);
+    /* メモリ解放 */
+    grn_obj_unlink(self->ctx, command);
 }
 
 /**
@@ -277,37 +267,27 @@ PHP_METHOD(Groonga, status)
  */
 PHP_METHOD(Groonga, tableList)
 {
-    zval *zcommand, *result, zstatus, zboolean;
-    groonga_command_t *gcommand;
+    groonga_t *self;
+    grn_obj *command;
 
     /* 引数の受け取り */
     if (zend_parse_parameters_none() != SUCCESS) {
         RETURN_FALSE;
     }
+    self = (groonga_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
-    /* オブジェクトを生成して初期化 */
-    MAKE_STD_ZVAL(zcommand);
-    object_init_ex(zcommand, groonga_command_ce);
+    /* コマンド取得 */
+    if (!proonga_command(self->ctx, &command, "table_list" TSRMLS_CC)) {
+        RETURN_FALSE;
+    }
 
-    /* $command->__construct($this, 'table_list') */
-    ZVAL_STRINGL(&zstatus, "table_list", strlen("table_list"), 0);
-    zend_call_method_with_2_params(
-        (zval **)&zcommand, Z_OBJCE_P(zcommand), 
-        NULL, "__construct", 
-        NULL, getThis(), &zstatus
-    );
+    /* コマンドの実行 */
+    if (!proonga_command_exec(self->ctx, command, return_value, 1 TSRMLS_CC)) {
+        RETURN_FALSE;
+    }
 
-    /* $command->exec(true) */
-    ZVAL_BOOL(&zboolean, 1);
-    zend_call_method_with_1_params(
-        (zval **)&zcommand, Z_OBJCE_P(zcommand), 
-        NULL, "exec", 
-        &result, &zboolean
-    );
-
-    zval_ptr_dtor(&zcommand);
-
-    RETURN_ZVAL(result, 1, 0);
+    /* メモリ解放 */
+    grn_obj_unlink(self->ctx, command);
 }
 
 /**
@@ -320,8 +300,7 @@ PHP_METHOD(Groonga, tableList)
 PHP_METHOD(Groonga, cacheLimit)
 {
     groonga_t *self;
-    grn_obj *command = NULL;
-    grn_ctx_info info;
+    grn_obj *command;
     char *limit = NULL;
     unsigned int limit_len = 0;
 
@@ -331,59 +310,26 @@ PHP_METHOD(Groonga, cacheLimit)
     }
     self = (groonga_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
-    command = grn_ctx_get(self->ctx, "cache_limit", strlen("cache_limit"));
-    if (NULL == command) {
+    if (!proonga_command(self->ctx, &command, "cache_limit" TSRMLS_CC)) {
         RETURN_FALSE;
     }
 
     if (0 < limit_len) {
-        /* 引数を取得して値を設定 */
-        grn_obj *expr_var = grn_expr_get_var(self->ctx, command, "max", strlen("max"));
-        if (NULL == expr_var) {
-            grn_obj_unlink(self->ctx, command);
-            RETURN_FALSE;
-        }
-
         /* 変数へ文字列を設定 */
-        if (GRN_SUCCESS != GRN_TEXT_PUTS(self->ctx, expr_var, limit)) {
-            grn_obj_unlink(self->ctx, command);
+        if (!proonga_command_set(self->ctx, command, "max", limit TSRMLS_CC)) {
             RETURN_FALSE;
         }
 
         /* コマンドの実行 */
-        if (GRN_SUCCESS != grn_expr_exec(self->ctx, command, 0)) {
-            grn_obj_unlink(self->ctx, command);
-            RETURN_FALSE;
-        }    
-
-        /* 実行結果の取得 */
-        if (GRN_SUCCESS != grn_ctx_info_get(self->ctx, &info)) {
-            grn_obj_unlink(self->ctx, command);
+        if (!proonga_command_exec(self->ctx, command, NULL, 0 TSRMLS_CC)) {
             RETURN_FALSE;
         }
-        /* コマンド結果のクリア */
-        GRN_BULK_REWIND(info.outbuf);
-
-        /* コマンド引数のリセット */
-        grn_expr_clear_vars(self->ctx, command);
     }
 
     /* コマンドの実行 */
-    if (GRN_SUCCESS != grn_expr_exec(self->ctx, command, 0)) {
-        grn_obj_unlink(self->ctx, command);
+    if (!proonga_command_exec(self->ctx, command, return_value, 0 TSRMLS_CC)) {
         RETURN_FALSE;
     }
-
-    /* 実行結果の取得 */
-    if (GRN_SUCCESS != grn_ctx_info_get(self->ctx, &info)) {
-        grn_obj_unlink(self->ctx, command);
-        RETURN_FALSE;
-    }
-
-    RETVAL_STRINGL(GRN_TEXT_VALUE(info.outbuf), (int)GRN_TEXT_LEN(info.outbuf), 1);
-
-    /* コマンド結果のクリア */
-    GRN_BULK_REWIND(info.outbuf);
 
     /* メモリ解放 */
     grn_obj_unlink(self->ctx, command);
@@ -400,6 +346,26 @@ PHP_METHOD(Groonga, cacheLimit)
 PHP_METHOD(Groonga, dump)
 {
     groonga_t *self;
+    grn_obj *command;
+
+    /* 引数の受け取り */
+    if (zend_parse_parameters_none() != SUCCESS) {
+        RETURN_FALSE;
+    }
+    self = (groonga_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
+
+    /* コマンド取得 */
+    if (!proonga_command(self->ctx, &command, "dump" TSRMLS_CC)) {
+        RETURN_FALSE;
+    }
+
+    /* コマンドの実行 */
+    if (!proonga_command_exec(self->ctx, command, return_value, 0 TSRMLS_CC)) {
+        RETURN_FALSE;
+    }
+
+    /* メモリ解放 */
+    grn_obj_unlink(self->ctx, command);
 }
 
 /**
@@ -414,5 +380,5 @@ PHP_METHOD(Groonga, table)
     groonga_t *self;
 }
 
-#   endif
-#endif
+#   endif       /* #ifndef HAVE_PROONGA_CLASS_GROONGA */
+#endif      /* #ifndef HAVE_PROONGA_CLASS_GROONGA_H */

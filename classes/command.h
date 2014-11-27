@@ -27,8 +27,8 @@
  * @filesource
  */
 
-#ifndef HAVE_GROONGA_CLASS_COMMAND_H
-#define HAVE_GROONGA_CLASS_COMMAND_H
+#ifndef HAVE_PROONGA_CLASS_COMMAND_H
+#define HAVE_PROONGA_CLASS_COMMAND_H
 
 /**
  * GCommandクラス::メンバー変数定義
@@ -67,8 +67,8 @@ ZEND_END_ARG_INFO()
 extern zend_function_entry groonga_command_class_methods[];
 
 #else
-#   ifndef HAVE_GROONGA_CLASS_COMMAND
-#   define HAVE_GROONGA_CLASS_COMMAND
+#   ifndef HAVE_PROONGA_CLASS_COMMAND
+#   define HAVE_PROONGA_CLASS_COMMAND
 
 /**
  * クラスの実装部分
@@ -109,8 +109,7 @@ PHP_METHOD(GCommand, __construct)
     self->ctx = grn_p->ctx;
 
     /* Groonga組み込みコマンドの取得 */
-    self->command = grn_ctx_get(self->ctx, command, command_len);
-    if (NULL == self->command) {
+    if (!proonga_command(self->ctx, &self->command, command TSRMLS_CC)) {
         char errmsg[64];
         sprintf(errmsg, "Command not found. [%s]", command);
         zend_throw_exception(groonga_exception_ce, errmsg, 0 TSRMLS_CC);
@@ -159,19 +158,7 @@ PHP_METHOD(GCommand, __set)
     }
     self = (groonga_command_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
-    /* 引数を取得して値を設定 */
-    expr_var = grn_expr_get_var(self->ctx, self->command, key, key_len);
-    if (NULL == expr_var) {
-        RETURN_FALSE;
-    }
-
-    /* expr_varの再初期化 */
-    if (GRN_SUCCESS != grn_obj_reinit(self->ctx, expr_var, GRN_DB_TEXT, 0)) {
-        RETURN_FALSE;
-    }
-
-    /* 変数へ文字列を設定 */
-    if (GRN_SUCCESS != GRN_TEXT_PUTS(self->ctx, expr_var, value)) {
+    if (!proonga_command_set(self->ctx, self->command, key, value TSRMLS_CC)) {
         RETURN_FALSE;
     }
 
@@ -190,6 +177,7 @@ PHP_METHOD(GCommand, exec)
     groonga_command_t *self;
     grn_ctx_info info;
     zend_bool assoc = 0;
+    zval retval;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|b", &assoc) == FAILURE) {
         RETURN_FALSE;
@@ -197,34 +185,12 @@ PHP_METHOD(GCommand, exec)
     self = (groonga_command_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* コマンドの実行 */
-    if (GRN_SUCCESS != grn_expr_exec(self->ctx, self->command, 0)) {
+    if (!proonga_command_exec(self->ctx, self->command, return_value, 1 TSRMLS_CC)) {
         RETURN_FALSE;
     }
-
-    if (GRN_SUCCESS != grn_ctx_info_get(self->ctx, &info)) {
-        RETURN_FALSE;
-    }
-
-    /* 出力タイプ分岐 */
-    if (assoc) {
-        php_json_decode_ex(
-            return_value, 
-            GRN_TEXT_VALUE(info.outbuf), 
-            (int)GRN_TEXT_LEN(info.outbuf), 
-            PHP_JSON_OBJECT_AS_ARRAY, 
-            JSON_PARSER_GROONGA_DEPTH TSRMLS_CC
-        );
-    } else {
-        RETVAL_STRINGL(GRN_TEXT_VALUE(info.outbuf), (int)GRN_TEXT_LEN(info.outbuf), 1);
-    }
-    /* コマンド結果のクリア */
-    GRN_BULK_REWIND(info.outbuf);
-    
-    /* コマンド引数のリセット */
-    grn_expr_clear_vars(self->ctx, self->command);
 
     return;
 }
 
-#   endif
-#endif
+#   endif       /* #ifndef HAVE_PROONGA_CLASS_COMMAND */
+#endif      /* #ifndef HAVE_PROONGA_CLASS_COMMAND_H */
