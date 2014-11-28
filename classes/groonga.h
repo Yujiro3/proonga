@@ -171,9 +171,6 @@ PHP_METHOD(Groonga, __destruct)
 {
     groonga_t *self;
 
-    if (zend_parse_parameters_none() != SUCCESS) {
-        RETURN_FALSE;
-    }
     self = (groonga_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* Groonga関連メモリ解放 */
