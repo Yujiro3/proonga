@@ -127,10 +127,6 @@ PHP_METHOD(GCommand, __destruct)
 {
     groonga_command_t *self;
 
-    /* 引数の受け取り */
-    if (zend_parse_parameters_none() != SUCCESS) {
-        RETURN_FALSE;
-    }
     self = (groonga_command_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     grn_obj_unlink(self->ctx, self->command);
