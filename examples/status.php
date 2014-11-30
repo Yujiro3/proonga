@@ -1,3 +1,4 @@
+<?php
 /**
  * The MIT License (MIT)
  * 
@@ -27,15 +28,18 @@
  * @filesource
  */
 
-#ifndef HAVE_PROONGA_OBJECT_H
-#define HAVE_PROONGA_OBJECT_H
+/*
+php -d extension=modules/groonga.so -f examples/command.php
+*/
 
-zend_object_value groonga_ctor(zend_class_entry *ce TSRMLS_DC);
-zend_object_value groonga_command_ctor(zend_class_entry *ce TSRMLS_DC);
-zend_object_value groonga_delete_ctor(zend_class_entry *ce TSRMLS_DC);
-zend_object_value groonga_table_ctor(zend_class_entry *ce TSRMLS_DC);
-zend_object_value groonga_load_ctor(zend_class_entry *ce TSRMLS_DC);
-zend_object_value groonga_column_ctor(zend_class_entry *ce TSRMLS_DC);
-zend_object_value groonga_select_ctor(zend_class_entry *ce TSRMLS_DC);
+/* DB接続 */
+$gdb = new Groonga('./db/test.db');
 
-#endif
+$result = $gdb->dump();
+print_r($result);
+echo "\n";
+
+$result = $gdb->status();
+print_r($result);
+echo "\n";
+

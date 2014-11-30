@@ -32,6 +32,7 @@
 
 int proonga_command(grn_ctx *ctx, grn_obj **command, const char *name TSRMLS_DC);
 int proonga_command_set(grn_ctx *ctx, grn_obj *command, const char *key, const char *value TSRMLS_DC);
+int proonga_command_get(grn_ctx *ctx, grn_obj *command, const char *key, zval *retval TSRMLS_DC);
 int proonga_command_exec(grn_ctx *ctx, grn_obj *command, zval *retval, int assoc TSRMLS_DC);
 
 #endif

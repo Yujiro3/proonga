@@ -93,6 +93,29 @@ int proonga_command_set(grn_ctx *ctx, grn_obj *command, const char *key, const c
 }
 
 /**
+ * Groongaコマンドへ変数設定
+ *
+ * @param grn_ctx    *ctx     コンテキスト
+ * @param grn_obj    *command コマンドオブジェクト
+ * @param const char *key     引数名
+ * @param zval       *retval  値
+ * @return int       0:偽 1:真
+ */
+int proonga_command_get(grn_ctx *ctx, grn_obj *command, const char *key, zval *retval TSRMLS_DC)
+{
+    /* 変数を取得 */
+    grn_obj *expr_var = grn_expr_get_var(ctx, command, key, strlen(key));
+    if (NULL == expr_var) {
+        grn_obj_unlink(ctx, command);
+        return 0;
+    }
+
+    ZVAL_STRINGL(retval, GRN_TEXT_VALUE(expr_var), (int)GRN_TEXT_LEN(expr_var), 1);
+
+    return 1;
+}
+
+/**
  * Groongaコマンドの実行
  *
  * @param grn_ctx   *ctx     コンテキスト
@@ -109,7 +132,7 @@ int proonga_command_exec(grn_ctx *ctx, grn_obj *command, zval *retval, int assoc
     if (GRN_SUCCESS != grn_expr_exec(ctx, command, 0)) {
         grn_obj_unlink(ctx, command);
         return 0;
-    }    
+    }
 
     /* 実行結果の取得 */
     if (GRN_SUCCESS != grn_ctx_info_get(ctx, &info)) {

@@ -59,7 +59,7 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO_EX(Groonga___destruct, 0, ZEND_RETURN_VALUE, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(Groonga_command, 0, ZEND_RETURN_VALUE, 0)
+ZEND_BEGIN_ARG_INFO_EX(Groonga_command, 0, ZEND_RETURN_VALUE, 1)
     ZEND_ARG_INFO(0, command)
 ZEND_END_ARG_INFO()
 
@@ -194,7 +194,7 @@ PHP_METHOD(Groonga, __destruct)
  * コマンド取得
  *
  * @access public
- * @param string command
+ * @param string  command
  * @return object command
  */
 PHP_METHOD(Groonga, command)
@@ -202,7 +202,6 @@ PHP_METHOD(Groonga, command)
     zval *zcommand, zcmdname;
     char *command = NULL;
     unsigned int command_len;
-    groonga_command_t *gcommand;
 
     /* 引数の受け取り */
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &command, &command_len) == FAILURE) {
@@ -215,6 +214,7 @@ PHP_METHOD(Groonga, command)
 
     /* $command->__construct($this, $cmd_name) */
     ZVAL_STRINGL(&zcmdname, command, command_len, 0);    
+
     zend_call_method_with_2_params(
         (zval **)&zcommand, Z_OBJCE_P(zcommand), 
         NULL, "__construct", 
@@ -374,7 +374,29 @@ PHP_METHOD(Groonga, dump)
  */
 PHP_METHOD(Groonga, table)
 {
-    groonga_t *self;
+    zval *ztable, zname;
+    char *table = NULL;
+    uint table_len;
+
+    /* 引数の受け取り */
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &table, &table_len) == FAILURE) {
+        RETURN_FALSE;
+    }
+
+    /* オブジェクトを生成して初期化 */
+    MAKE_STD_ZVAL(ztable);
+    object_init_ex(ztable, groonga_table_ce);
+
+    /* $table->__construct($this, $name) */
+    ZVAL_STRINGL(&zname, table, table_len, 0);    
+    zend_call_method_with_2_params(
+        (zval **)&ztable, Z_OBJCE_P(ztable), 
+        NULL, "__construct", 
+        NULL, getThis(), &zname
+    );
+
+    /* 返り値へオブジェクトを渡す */
+    RETURN_ZVAL(ztable, 1, 0);
 }
 
 #   endif       /* #ifndef HAVE_PROONGA_CLASS_GROONGA */
