@@ -29,29 +29,39 @@
  */
 
 /*
-php -d extension=modules/groonga.so -f examples/command.php
+php -d extension=modules/groonga.so -f examples/groonga.php
 */
 
 /* DB接続 */
 $gdb = new Groonga('./db/test.db');
-/*
+
+echo '/_/_/_/_ status _/_/_/_/'."\n";
 $result = $gdb->status();
 print_r($result);
+echo "\n-----------\n";
 
+
+echo '/_/_/_/_ tableList _/_/_/_/'."\n";
 $result = $gdb->tableList();
 print_r($result);
-*/
-$result = $gdb->cacheLimit(50);
 echo "\n-----------\n";
+
+
+echo '/_/_/_/_ cacheLimit _/_/_/_/'."\n";
+$result = $gdb->cacheLimit();
+echo $result."\n";
+$result = $gdb->cacheLimit(50);
+echo $result."\n";
+echo "-----------\n";
+
+
+echo '/_/_/_/_ dump _/_/_/_/'."\n";
+$result = $gdb->dump();
 print_r($result);
-echo "\n";
-$cache_limit = $gdb->command('cache_limit');
-$result = $cache_limit->exec(1);
-print_r($result);
+echo "\n-----------\n";
 
 
-// $gdb->dump();
-
-// $gdb->table($name);
-?>
-
+echo '/_/_/_/_ table _/_/_/_/'."\n";
+$table = $gdb->table('Users');
+print_r($table);
+echo "\n-----------\n";

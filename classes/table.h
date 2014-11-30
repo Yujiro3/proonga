@@ -36,10 +36,8 @@
 typedef struct {
     zend_object std;
     grn_ctx *ctx;
-    grn_obj *table;
+    grn_obj *command;
     char *name;
-    HashTable *info;
-    HashTable *value;
 } groonga_table_t;
 
 /**
@@ -48,24 +46,26 @@ typedef struct {
 PHP_METHOD(GTable, __construct);
 PHP_METHOD(GTable, __destruct);
 PHP_METHOD(GTable, __set);
-
-PHP_METHOD(GTable, setFlags);
-PHP_METHOD(GTable, setKeyType);
-PHP_METHOD(GTable, setValueType);
-PHP_METHOD(GTable, setDefaultTokenizer);
-PHP_METHOD(GTable, setNormalizer);
-PHP_METHOD(GTable, setTokenFilters);
-
+PHP_METHOD(GTable, __get);
+PHP_METHOD(GTable, name);
+PHP_METHOD(GTable, flags);
+PHP_METHOD(GTable, keyType);
+PHP_METHOD(GTable, valueType);
+PHP_METHOD(GTable, defaultTokenizer);
+PHP_METHOD(GTable, normalizer);
+PHP_METHOD(GTable, tokenFilters);
 PHP_METHOD(GTable, load);
+PHP_METHOD(GTable, delete);
+PHP_METHOD(GTable, column);
+PHP_METHOD(GTable, select);
 PHP_METHOD(GTable, create);
 PHP_METHOD(GTable, remove);
 PHP_METHOD(GTable, rename);
-PHP_METHOD(GTable, delete);
 PHP_METHOD(GTable, dump);
 PHP_METHOD(GTable, truncate);
 
 
-ZEND_BEGIN_ARG_INFO_EX(GTable___construct, 1, ZEND_RETURN_VALUE, 2)
+ZEND_BEGIN_ARG_INFO_EX(GTable___construct, 0, ZEND_RETURN_VALUE, 2)
     ZEND_ARG_INFO(0, gobject)
     ZEND_ARG_INFO(0, name)
 ZEND_END_ARG_INFO()
@@ -73,14 +73,27 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO_EX(GTable___destruct, 0, ZEND_RETURN_VALUE, 0)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(GTable___set, 0, ZEND_RETURN_VALUE, 2)
+    ZEND_ARG_INFO(0, key)
+    ZEND_ARG_INFO(0, value)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(GTable___get, 0, ZEND_RETURN_VALUE, 1)
+    ZEND_ARG_INFO(0, key)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(GTable_load, 0, ZEND_RETURN_VALUE, 0)
+    ZEND_ARG_INFO(0, value)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(GTable_delete, 0, ZEND_RETURN_VALUE, 0)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(GTable_1_param, 0, ZEND_RETURN_VALUE, 1)
     ZEND_ARG_INFO(0, value)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(GTable_0_param, 0, ZEND_RETURN_VALUE, 0)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO_EX(GTable_delete, 1, ZEND_RETURN_VALUE, 0)
 ZEND_END_ARG_INFO()
 
 extern zend_function_entry groonga_table_class_methods[];
@@ -96,18 +109,22 @@ extern zend_function_entry groonga_table_class_methods[];
 zend_function_entry groonga_table_class_methods[] = {
     PHP_ME(GTable, __construct,         GTable___construct, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
     PHP_ME(GTable, __destruct,          GTable___destruct,  ZEND_ACC_PUBLIC)
-
-    PHP_ME(GTable, setFlags,            GTable_1_param,     ZEND_ACC_PUBLIC)
-    PHP_ME(GTable, setKeyType,          GTable_1_param,     ZEND_ACC_PUBLIC)
-    PHP_ME(GTable, setValueType,        GTable_1_param,     ZEND_ACC_PUBLIC)
-    PHP_ME(GTable, setDefaultTokenizer, GTable_1_param,     ZEND_ACC_PUBLIC)
-    PHP_ME(GTable, setNormalizer,       GTable_1_param,     ZEND_ACC_PUBLIC)
-    PHP_ME(GTable, setTokenFilters,     GTable_1_param,     ZEND_ACC_PUBLIC)
-
+    PHP_ME(GTable, __set,               GTable___set,       ZEND_ACC_PUBLIC)
+    PHP_ME(GTable, __get,               GTable___get,       ZEND_ACC_PUBLIC)
+    PHP_ME(GTable, name,                GTable_1_param,     ZEND_ACC_PUBLIC)
+    PHP_ME(GTable, flags,               GTable_1_param,     ZEND_ACC_PUBLIC)
+    PHP_ME(GTable, keyType,             GTable_1_param,     ZEND_ACC_PUBLIC)
+    PHP_ME(GTable, valueType,           GTable_1_param,     ZEND_ACC_PUBLIC)
+    PHP_ME(GTable, defaultTokenizer,    GTable_1_param,     ZEND_ACC_PUBLIC)
+    PHP_ME(GTable, normalizer,          GTable_1_param,     ZEND_ACC_PUBLIC)
+    PHP_ME(GTable, tokenFilters,        GTable_1_param,     ZEND_ACC_PUBLIC)
+    PHP_ME(GTable, load,                GTable_load,        ZEND_ACC_PUBLIC)
+    PHP_ME(GTable, delete,              GTable_delete,      ZEND_ACC_PUBLIC)
+    PHP_ME(GTable, column,              GTable_1_param,     ZEND_ACC_PUBLIC)
+    PHP_ME(GTable, select,              GTable_0_param,     ZEND_ACC_PUBLIC)
     PHP_ME(GTable, create,              GTable_0_param,     ZEND_ACC_PUBLIC)
     PHP_ME(GTable, remove,              GTable_0_param,     ZEND_ACC_PUBLIC)
     PHP_ME(GTable, rename,              GTable_1_param,     ZEND_ACC_PUBLIC)
-    PHP_ME(GTable, delete,              GTable_delete,      ZEND_ACC_PUBLIC)
     PHP_ME(GTable, dump,                GTable_0_param,     ZEND_ACC_PUBLIC)
     PHP_ME(GTable, truncate,            GTable_0_param,     ZEND_ACC_PUBLIC)
 
@@ -146,21 +163,16 @@ PHP_METHOD(GTable, __construct)
     memcpy(self->name, name, name_len);
 
     /* Groonga組み込みコマンドの取得 */
-    if (!proonga_command(self->ctx, &self->table, "table_create" TSRMLS_CC)) {
+    if (!proonga_command(self->ctx, &self->command, "table_create" TSRMLS_CC)) {
         zend_throw_exception(groonga_exception_ce, "Unable to initialize of table.", 0 TSRMLS_CC);
         RETURN_FALSE;
     }
 
     /* 変数へ文字列を設定 */
-    if (!proonga_command_set(self->ctx, self->table, "name", self->name TSRMLS_CC)) {
+    if (!proonga_command_set(self->ctx, self->command, "name", self->name TSRMLS_CC)) {
         zend_throw_exception(groonga_exception_ce, "Unable to initialize of table.", 0 TSRMLS_CC);
         RETURN_FALSE;
     }
-
-    /* テーブル値プロパティの初期化 */
-    zvalue = zend_read_property(groonga_table_ce, getThis(), ZEND_STRL("value"), 1 TSRMLS_CC);
-    object_init_ex(zvalue, ZEND_STANDARD_CLASS_DEF_PTR);
-    self->value = HASH_OF(zvalue);
 }
 
 /**
@@ -172,25 +184,10 @@ PHP_METHOD(GTable, __construct)
 PHP_METHOD(GTable, __destruct)
 {
     groonga_table_t *self;
-    zval **zobject;
-    HashPosition hpos;
 
     self = (groonga_table_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
-    /* テーブル値プロパティの破棄 */
-    zend_hash_internal_pointer_reset_ex(self->value, &hpos);
-    while (zend_hash_get_current_data_ex(self->value, (void **)&zobject, &hpos) == SUCCESS) {        
-        zval_dtor(*zobject);
-        zend_hash_move_forward_ex(self->value, &hpos);
-    }
-
-    /* テーブル情報プロパティの破棄 */
-    zend_hash_internal_pointer_reset_ex(self->info, &hpos);
-    while (zend_hash_get_current_data_ex(self->info, (void **)&zobject, &hpos) == SUCCESS) {        
-        zval_dtor(*zobject);
-        zend_hash_move_forward_ex(self->info, &hpos);
-    }
-
+    grn_obj_unlink(self->ctx, self->command);
     efree(self->name);
 }
 
@@ -205,40 +202,62 @@ PHP_METHOD(GTable, __destruct)
 PHP_METHOD(GTable, __set)
 {
     groonga_table_t *self;
-    zval *zvalues;
-    char *name, *value;
-    uint name_len, value_len;
+    char *key, *value;
+    uint key_len, value_len;
 
     /* 引数の受け取り */
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss", &name, &name_len, &value, &value_len) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss", &key, &key_len, &value, &value_len) == FAILURE) {
         RETURN_FALSE;
     }
     self = (groonga_table_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
-    /* テーブルリストプロパティの取得 */
-    zvalues = zend_read_property(groonga_table_ce, getThis(), ZEND_STRL("value"), 1 TSRMLS_CC);
-
-    /* 値リストへ追加 */
-    add_property_stringl(zvalues, name, value, value_len, 1);
-
-    /* テーブルリストプロパティの更新 */
-    zend_update_property(groonga_table_ce, getThis(), ZEND_STRL("value"), zvalues TSRMLS_CC);
-
+    /* 変数の設定 */
+    if (!proonga_command_set(self->ctx, self->command, key, value TSRMLS_CC)) {
+        RETURN_FALSE;
+    }
+    
     RETURN_TRUE;
 }
 
+/**
+ * 変数取得
+ *
+ * @access public
+ * @param string   $key
+ * @param string   $value
+ * @return boolean
+ */
+PHP_METHOD(GTable, __get)
+{
+    groonga_table_t *self;
+    char *key;
+    uint key_len;
+
+    /* 引数の受け取り */
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &key, &key_len) == FAILURE) {
+        RETURN_FALSE;
+    }
+    self = (groonga_table_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
+
+    /* 変数の設定 */
+    if (!proonga_command_get(self->ctx, self->command, key, return_value TSRMLS_CC)) {
+        RETURN_FALSE;
+    }
+    
+    return;
+}
 
 /**
- * 変数の設定
+ * nameの設定
  *
  * @access public
  * @param string value
  * @return object self
  */
-PHP_METHOD(GTable, setFlags)
+PHP_METHOD(GTable, name)
 {
     groonga_table_t *self;
-    char *value = NULL;
+    char *value;
     uint value_len;
 
     /* 引数の受け取り */
@@ -248,24 +267,24 @@ PHP_METHOD(GTable, setFlags)
     self = (groonga_table_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!proonga_command_set(self->ctx, self->table, "flags", value TSRMLS_CC)) {
+    if (!proonga_command_set(self->ctx, self->command, "name", value TSRMLS_CC)) {
         RETURN_FALSE;
     }
-
+    
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
 /**
- * 変数の設定
+ * flagsの設定
  *
  * @access public
  * @param string value
  * @return object self
  */
-PHP_METHOD(GTable, setKeyType)
+PHP_METHOD(GTable, flags)
 {
     groonga_table_t *self;
-    char *value = NULL;
+    char *value;
     uint value_len;
 
     /* 引数の受け取り */
@@ -275,24 +294,24 @@ PHP_METHOD(GTable, setKeyType)
     self = (groonga_table_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!proonga_command_set(self->ctx, self->table, "key_type", value TSRMLS_CC)) {
+    if (!proonga_command_set(self->ctx, self->command, "flags", value TSRMLS_CC)) {
         RETURN_FALSE;
     }
-
+    
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
 /**
- * 変数の設定
+ * keyTypeの設定
  *
  * @access public
  * @param string value
  * @return object self
  */
-PHP_METHOD(GTable, setValueType)
+PHP_METHOD(GTable, keyType)
 {
     groonga_table_t *self;
-    char *value = NULL;
+    char *value;
     uint value_len;
 
     /* 引数の受け取り */
@@ -302,24 +321,24 @@ PHP_METHOD(GTable, setValueType)
     self = (groonga_table_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!proonga_command_set(self->ctx, self->table, "value_type", value TSRMLS_CC)) {
+    if (!proonga_command_set(self->ctx, self->command, "key_type", value TSRMLS_CC)) {
         RETURN_FALSE;
     }
-
+    
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
 /**
- * 変数の設定
+ * valueTypeの設定
  *
  * @access public
  * @param string value
  * @return object self
  */
-PHP_METHOD(GTable, setDefaultTokenizer)
+PHP_METHOD(GTable, valueType)
 {
     groonga_table_t *self;
-    char *value = NULL;
+    char *value;
     uint value_len;
 
     /* 引数の受け取り */
@@ -329,24 +348,24 @@ PHP_METHOD(GTable, setDefaultTokenizer)
     self = (groonga_table_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!proonga_command_set(self->ctx, self->table, "default_tokenizer", value TSRMLS_CC)) {
+    if (!proonga_command_set(self->ctx, self->command, "value_type", value TSRMLS_CC)) {
         RETURN_FALSE;
     }
-
+    
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
 /**
- * 変数の設定
+ * defaultTokenizerの設定
  *
  * @access public
  * @param string value
  * @return object self
  */
-PHP_METHOD(GTable, setNormalizer)
+PHP_METHOD(GTable, defaultTokenizer)
 {
     groonga_table_t *self;
-    char *value = NULL;
+    char *value;
     uint value_len;
 
     /* 引数の受け取り */
@@ -356,24 +375,24 @@ PHP_METHOD(GTable, setNormalizer)
     self = (groonga_table_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!proonga_command_set(self->ctx, self->table, "normalizer", value TSRMLS_CC)) {
+    if (!proonga_command_set(self->ctx, self->command, "default_tokenizer", value TSRMLS_CC)) {
         RETURN_FALSE;
     }
-
+    
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
 /**
- * 変数の設定
+ * normalizerの設定
  *
  * @access public
  * @param string value
  * @return object self
  */
-PHP_METHOD(GTable, setTokenFilters)
+PHP_METHOD(GTable, normalizer)
 {
     groonga_table_t *self;
-    char *value = NULL;
+    char *value;
     uint value_len;
 
     /* 引数の受け取り */
@@ -383,10 +402,37 @@ PHP_METHOD(GTable, setTokenFilters)
     self = (groonga_table_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!proonga_command_set(self->ctx, self->table, "token_filters", value TSRMLS_CC)) {
+    if (!proonga_command_set(self->ctx, self->command, "normalizer", value TSRMLS_CC)) {
         RETURN_FALSE;
     }
+    
+    RETURN_ZVAL(getThis(), 1, 0);
+}
 
+/**
+ * tokenFiltersの設定
+ *
+ * @access public
+ * @param string value
+ * @return object self
+ */
+PHP_METHOD(GTable, tokenFilters)
+{
+    groonga_table_t *self;
+    char *value;
+    uint value_len;
+
+    /* 引数の受け取り */
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &value, &value_len) == FAILURE) {
+        RETURN_FALSE;
+    }
+    self = (groonga_table_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
+
+    /* 変数の設定 */
+    if (!proonga_command_set(self->ctx, self->command, "token_filters", value TSRMLS_CC)) {
+        RETURN_FALSE;
+    }
+    
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
@@ -399,6 +445,139 @@ PHP_METHOD(GTable, setTokenFilters)
  */
 PHP_METHOD(GTable, load)
 {
+    zval *zload, *zvalues = NULL;
+
+    /* 引数の受け取り */
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|z", &zvalues) == FAILURE) {
+        RETURN_FALSE;
+    }
+
+    /* オブジェクトを生成して初期化 */
+    MAKE_STD_ZVAL(zload);
+    object_init_ex(zload, groonga_load_ce);
+
+    /* $load->__construct($this) */
+    zend_call_method_with_1_params(
+        (zval **)&zload, Z_OBJCE_P(zload), 
+        NULL, "__construct", 
+        NULL, getThis()
+    );
+
+    if (NULL != zvalues) {
+        /* $load->values($values) */
+        zend_call_method_with_1_params(
+            (zval **)&zload, Z_OBJCE_P(zload), 
+            NULL, "values", 
+            NULL, zvalues
+        );
+
+        /* $load->exec() */
+        zend_call_method_with_0_params(
+            (zval **)&zload, Z_OBJCE_P(zload), 
+            NULL, "exec", 
+            NULL
+        );
+    }
+
+    /* 返り値へオブジェクトを渡す */
+    RETURN_ZVAL(zload, 1, 0);
+}
+
+/**
+ * レコードを削除
+ *
+ * @access public
+ * @param string value
+ * @return object self
+ */
+PHP_METHOD(GTable, delete)
+{
+    zval *zdelete;
+
+    /* 引数の受け取り */
+    if (zend_parse_parameters_none() != SUCCESS) {
+        RETURN_FALSE;
+    }
+
+    /* オブジェクトを生成して初期化 */
+    MAKE_STD_ZVAL(zdelete);
+    object_init_ex(zdelete, groonga_delete_ce);
+
+    /* $delete->__construct($this) */
+    zend_call_method_with_1_params(
+        (zval **)&zdelete, Z_OBJCE_P(zdelete), 
+        NULL, "__construct", 
+        NULL, getThis()
+    );
+
+    /* 返り値へオブジェクトを渡す */
+    RETURN_ZVAL(zdelete, 1, 0);
+}
+
+/**
+ * カラム操作
+ *
+ * @access public
+ * @param string value
+ * @return object self
+ */
+PHP_METHOD(GTable, column)
+{
+    zval *zcolumn, zname;
+    char *name = NULL;
+    unsigned int name_len;
+
+    /* 引数の受け取り */
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &name, &name_len) == FAILURE) {
+        RETURN_FALSE;
+    }
+
+    /* オブジェクトを生成して初期化 */
+    MAKE_STD_ZVAL(zcolumn);
+    object_init_ex(zcolumn, groonga_column_ce);
+
+    /* $column->__construct($this, $name) */
+    ZVAL_STRINGL(&zname, name, name_len, 0);    
+
+    zend_call_method_with_2_params(
+        (zval **)&zcolumn, Z_OBJCE_P(zcolumn), 
+        NULL, "__construct", 
+        NULL, getThis(), &zname
+    );
+
+    /* 返り値へオブジェクトを渡す */
+    RETURN_ZVAL(zcolumn, 1, 0);
+}
+
+/**
+ * select操作
+ *
+ * @access public
+ * @param string value
+ * @return object self
+ */
+PHP_METHOD(GTable, select)
+{
+    zval *zselect;
+
+    /* 引数の受け取り */
+    if (zend_parse_parameters_none() != SUCCESS) {
+        RETURN_FALSE;
+    }
+
+    /* オブジェクトを生成して初期化 */
+    MAKE_STD_ZVAL(zselect);
+    object_init_ex(zselect, groonga_select_ce);
+
+    /* $select->__construct($this) */
+    zend_call_method_with_1_params(
+        (zval **)&zselect, Z_OBJCE_P(zselect), 
+        NULL, "__construct", 
+        NULL, getThis()
+    );
+
+    /* 返り値へオブジェクトを渡す */
+    RETURN_ZVAL(zselect, 1, 0);
 }
 
 /**
@@ -418,12 +597,11 @@ PHP_METHOD(GTable, create)
         RETURN_FALSE;
     }
     self = (groonga_table_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
-
     /* コマンドの実行 */
-    if (!proonga_command_exec(self->ctx, self->table, &retval, 1 TSRMLS_CC)) {
+    if (!proonga_command_exec(self->ctx, self->command, &retval, 0 TSRMLS_CC)) {
         RETURN_FALSE;
     }    
-    
+
     /* 結果の判定 */
     if (!strcmp("true", Z_STRVAL(retval))) {
         RETURN_FALSE;    
@@ -456,7 +634,7 @@ PHP_METHOD(GTable, remove)
         RETURN_FALSE;
     }
 
-    /* 変数へ文字列を設定 */
+    /* テーブル名を設定 */
     if (!proonga_command_set(self->ctx, command, "name", self->name TSRMLS_CC)) {
         RETURN_FALSE;
     }
@@ -526,18 +704,12 @@ PHP_METHOD(GTable, rename)
         RETURN_FALSE;    
     }
 
-    RETURN_ZVAL(getThis(), 1, 0);
-}
+    /* テーブル名の変更 */
+    efree(self->name);
+    self->name = emalloc(name_len);
+    memcpy(self->name, name, name_len);
 
-/**
- * レコードを削除
- *
- * @access public
- * @param string value
- * @return object self
- */
-PHP_METHOD(GTable, delete)
-{
+    RETURN_ZVAL(getThis(), 1, 0);
 }
 
 /**
@@ -576,7 +748,7 @@ PHP_METHOD(GTable, dump)
     /* メモリ解放 */
     grn_obj_unlink(self->ctx, command);
 
-    RETURN_ZVAL(getThis(), 1, 0);
+    return ;
 }
 
 /**

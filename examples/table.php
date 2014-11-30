@@ -29,7 +29,7 @@
  */
 
 /*
-php -d extension=modules/groonga.so -f examples/command.php
+php -d extension=modules/groonga.so -f examples/table.php
 */
 
 /* DB接続 */
@@ -38,44 +38,80 @@ $gdb = new Groonga('./db/test.db');
 /**
  * table_createコマンド
  */
-$table = $gdb->table('Users');
+echo '/_/_/_/_ create _/_/_/_/'."\n";
 
+$table = $gdb->table('Sample');
+$table->flags    = "TABLE_HASH_KEY";
+$table->key_type = "ShortText";
 
-$table->name;
-$table->flags;
-$table->key_type;
-$table->value_type;
-$table->default_tokenizer;
-$table->normalizer;
-$table->token_filters;
-
-
-$table->setFlags();
-$table->setKeyType();
-$table->setValueType();
-$table->setDefaultTokenizer();
-$table->setNormalizer();
-$table->setTokenFilters();
-
+echo 'flags:'.$table->flags . "\n";
+echo 'key_type:'.$table->key_type . "\n";
 
 $table->create();
-$table->remove();
-$table->rename();
-$table->delete();
-$table->dump();
-$table->truncate();
+echo "\n-----------\n";
 
 
-$table->cursor();
+/**
+ * table_renameコマンド
+ */
+echo '/_/_/_/_ rename _/_/_/_/'."\n";
+$result = $table->rename('Test');
+if (false !== $result) {
+    echo "renamed\n";
+}
+echo "\n-----------\n";
+
+/**
+ * truncateコマンド
+ */
+echo '/_/_/_/_ truncate _/_/_/_/'."\n";
+$result = $table->truncate();
+if (false !== $result) {
+    echo "truncated\n";
+}
+echo "\n-----------\n";
 
 
+/**
+ * removeコマンド
+ */
+echo '/_/_/_/_ remove _/_/_/_/'."\n";
+$result = $table->remove();
+if (false !== $result) {
+    echo "removed\n";
+}
+echo "\n-----------\n";
 
-$table->name
-$table->follower
-$table->favorites
-$table->location
-$table->location_str
-$table->description
-$table->followee
 
+/**
+ * dumpコマンド
+ */
+echo '/_/_/_/_ dump _/_/_/_/'."\n";
+echo $table->dump();
+echo "\n-----------\n";
+
+
+/**
+ * loadコマンド
+ */
+echo '/_/_/_/_ load _/_/_/_/'."\n";
+$load = $table->load();
+print_r($load);
+echo "\n-----------\n";
+
+/**
+ * deleteコマンド
+ */
+echo '/_/_/_/_ delete _/_/_/_/'."\n";
+$delete = $table->delete();
+print_r($delete);
+echo "\n-----------\n";
+
+/**
+ * selectコマンド
+ */
+echo '/_/_/_/_ select _/_/_/_/'."\n";
+$select = $table->select();
+print_r($select);
+echo "\n-----------\n";
 

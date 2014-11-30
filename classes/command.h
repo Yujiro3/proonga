@@ -45,20 +45,25 @@ typedef struct {
 PHP_METHOD(GCommand, __construct);
 PHP_METHOD(GCommand, __destruct);
 PHP_METHOD(GCommand, __set);
+PHP_METHOD(GCommand, __get);
 PHP_METHOD(GCommand, exec);
 
 
-ZEND_BEGIN_ARG_INFO_EX(GCommand___construct, 1, ZEND_RETURN_VALUE, 2)
+ZEND_BEGIN_ARG_INFO_EX(GCommand___construct, 0, ZEND_RETURN_VALUE, 2)
     ZEND_ARG_INFO(0, gobject)
     ZEND_ARG_INFO(0, command)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(GCommand__destruct, 0, ZEND_RETURN_VALUE, 0)
+ZEND_BEGIN_ARG_INFO_EX(GCommand___destruct, 0, ZEND_RETURN_VALUE, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(GCommand___set, 0, ZEND_RETURN_VALUE, 2)
     ZEND_ARG_INFO(0, key)
     ZEND_ARG_INFO(0, value)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(GCommand___get, 0, ZEND_RETURN_VALUE, 1)
+    ZEND_ARG_INFO(0, key)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(GCommand_exec, 0, ZEND_RETURN_VALUE, 0)
@@ -75,8 +80,9 @@ extern zend_function_entry groonga_command_class_methods[];
  */
 zend_function_entry groonga_command_class_methods[] = {
     PHP_ME(GCommand, __construct, GCommand___construct, ZEND_ACC_CTOR | ZEND_ACC_PUBLIC)
-    PHP_ME(GCommand, __destruct,  GCommand__destruct,   ZEND_ACC_DTOR | ZEND_ACC_PUBLIC)
+    PHP_ME(GCommand, __destruct,  GCommand___destruct,  ZEND_ACC_DTOR | ZEND_ACC_PUBLIC)
     PHP_ME(GCommand, __set,       GCommand___set,       ZEND_ACC_PUBLIC)
+    PHP_ME(GCommand, __get,       GCommand___get,       ZEND_ACC_PUBLIC)
     PHP_ME(GCommand, exec,        GCommand_exec,        ZEND_ACC_PUBLIC)
 
     PHP_FE_END    /* Must be the last line in groonga_functions[] */
@@ -132,7 +138,6 @@ PHP_METHOD(GCommand, __destruct)
     grn_obj_unlink(self->ctx, self->command);
 }
 
-
 /**
  * 変数設定
  *
@@ -146,7 +151,6 @@ PHP_METHOD(GCommand, __set)
     groonga_command_t *self;
     char *key, *value;
     uint key_len, value_len;
-    grn_obj *expr_var = NULL;
 
     /* 引数の受け取り */
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss", &key, &key_len, &value, &value_len) == FAILURE) {
@@ -159,6 +163,32 @@ PHP_METHOD(GCommand, __set)
     }
 
     RETURN_TRUE;
+}
+
+/**
+ * 変数取得
+ *
+ * @access public
+ * @param string   $key
+ * @return string
+ */
+PHP_METHOD(GCommand, __get)
+{
+    groonga_command_t *self;
+    char *key;
+    uint key_len;
+
+    /* 引数の受け取り */
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &key, &key_len) == FAILURE) {
+        RETURN_FALSE;
+    }
+    self = (groonga_command_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
+
+    if (!proonga_command_get(self->ctx, self->command, key, return_value TSRMLS_CC)) {
+        RETURN_FALSE;
+    }
+
+    return;
 }
 
 /**

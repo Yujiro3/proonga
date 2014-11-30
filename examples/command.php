@@ -336,8 +336,6 @@ $load->values = <<< JSON
 JSON;
 $load->exec();
 
-
-
 /**
  * selectコマンド
  */

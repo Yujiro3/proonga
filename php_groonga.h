@@ -56,8 +56,11 @@
 
 extern zend_class_entry *groonga_database_ce;
 extern zend_class_entry *groonga_command_ce;
+extern zend_class_entry *groonga_delete_ce;
 extern zend_class_entry *groonga_table_ce;
+extern zend_class_entry *groonga_load_ce;
 extern zend_class_entry *groonga_column_ce;
+extern zend_class_entry *groonga_select_ce;
 
 PHP_MINIT_FUNCTION(groonga);
 PHP_MSHUTDOWN_FUNCTION(groonga);
@@ -104,6 +107,26 @@ ZEND_END_MODULE_GLOBALS(groonga)
 
 #ifndef HAVE_PROONGA_CLASS_COMMAND_H
 #   include "classes/command.h"
+#endif
+
+#ifndef HAVE_PROONGA_CLASS_DELETE_H
+#   include "classes/delete.h"
+#endif
+
+#ifndef HAVE_PROONGA_CLASS_TABLE_H
+#   include "classes/table.h"
+#endif
+
+#ifndef HAVE_PROONGA_CLASS_LOAD_H
+#   include "classes/load.h"
+#endif
+
+#ifndef HAVE_PROONGA_CLASS_COLUMN_H
+#   include "classes/column.h"
+#endif
+
+#ifndef HAVE_PROONGA_CLASS_SELECT_H
+#   include "classes/select.h"
 #endif
 
 #endif    /* HAVE_PHP_GROONGA_H */

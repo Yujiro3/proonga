@@ -1,3 +1,4 @@
+<?php
 /**
  * The MIT License (MIT)
  * 
@@ -27,15 +28,37 @@
  * @filesource
  */
 
-#ifndef HAVE_PROONGA_OBJECT_H
-#define HAVE_PROONGA_OBJECT_H
+/*
+php -d extension=modules/groonga.so -f examples/table.php
+*/
 
-zend_object_value groonga_ctor(zend_class_entry *ce TSRMLS_DC);
-zend_object_value groonga_command_ctor(zend_class_entry *ce TSRMLS_DC);
-zend_object_value groonga_delete_ctor(zend_class_entry *ce TSRMLS_DC);
-zend_object_value groonga_table_ctor(zend_class_entry *ce TSRMLS_DC);
-zend_object_value groonga_load_ctor(zend_class_entry *ce TSRMLS_DC);
-zend_object_value groonga_column_ctor(zend_class_entry *ce TSRMLS_DC);
-zend_object_value groonga_select_ctor(zend_class_entry *ce TSRMLS_DC);
+exec('rm -rf ./db/; mkdir ./db');
 
-#endif
+/* DB接続 */
+$gdb = new Groonga('./db/test.db');
+
+/* table_create --name Sample --flags TABLE_HASH_KEY --key_type ShortText */
+$table = $gdb->table('Sample');
+$table->flags    = "TABLE_HASH_KEY";
+$table->key_type = "ShortText";
+$table->create();
+
+
+/* column_create --table Sample --name name --flags COLUMN_SCALAR --type ShortText */
+$column = $table->column('name');
+$column->flags = 'COLUMN_SCALAR';
+$column->type  = 'ShortText';
+$column->create();
+
+
+/* load --table Users [ { "_key": "alice", "name": "Alice" }, { "_key": "bob", "name": "Bob" } ] */
+$load = $table->load('[ { "_key": "alice", "name": "Alice" }, { "_key": "bob", "name": "Bob" } ]');
+
+
+$select = $table->select();
+$result = $select->exec(1);
+
+
+echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_BIGINT_AS_STRING);
+
+

@@ -39,6 +39,7 @@
 #include "php_ini.h"
 #include "ext/standard/info.h"
 #include "ext/standard/php_string.h"
+#include "ext/standard/php_smart_str.h"
 #include "ext/json/php_json.h"
 #include "zend_exceptions.h"
 #include "zend_interfaces.h"
@@ -68,8 +69,11 @@ static int groonga_initialized = 0;
 /* クラス構造体 */
 zend_class_entry *groonga_ce = NULL;
 zend_class_entry *groonga_command_ce = NULL;
+zend_class_entry *groonga_delete_ce = NULL;
 zend_class_entry *groonga_table_ce = NULL;
+zend_class_entry *groonga_load_ce = NULL;
 zend_class_entry *groonga_column_ce = NULL;
+zend_class_entry *groonga_select_ce = NULL;
 zend_class_entry *groonga_exception_ce = NULL;
 
 /**
@@ -137,10 +141,35 @@ PHP_MINIT_FUNCTION(groonga)
     groonga_ce = zend_register_internal_class(&ce TSRMLS_CC);
     groonga_ce->create_object = groonga_ctor;
 
-    /* GCursorクラスの登録 */
+    /* GCommandクラスの登録 */
     INIT_CLASS_ENTRY(ce, "GCommand", groonga_command_class_methods);
     groonga_command_ce = zend_register_internal_class(&ce TSRMLS_CC);
     groonga_command_ce->create_object = groonga_command_ctor;
+
+    /* GDeleteクラスの登録 */
+    INIT_CLASS_ENTRY(ce, "GDelete", groonga_delete_class_methods);
+    groonga_delete_ce = zend_register_internal_class(&ce TSRMLS_CC);
+    groonga_delete_ce->create_object = groonga_delete_ctor;
+
+    /* GTableクラスの登録 */
+    INIT_CLASS_ENTRY(ce, "GTable", groonga_table_class_methods);
+    groonga_table_ce = zend_register_internal_class(&ce TSRMLS_CC);
+    groonga_table_ce->create_object = groonga_table_ctor;
+
+    /* GLoadクラスの登録 */
+    INIT_CLASS_ENTRY(ce, "GLoad", groonga_load_class_methods);
+    groonga_load_ce = zend_register_internal_class(&ce TSRMLS_CC);
+    groonga_load_ce->create_object = groonga_load_ctor;
+
+    /* GColumnクラスの登録 */
+    INIT_CLASS_ENTRY(ce, "GColumn", groonga_column_class_methods);
+    groonga_column_ce = zend_register_internal_class(&ce TSRMLS_CC);
+    groonga_column_ce->create_object = groonga_column_ctor;
+
+    /* GSelectクラスの登録 */
+    INIT_CLASS_ENTRY(ce, "GSelect", groonga_select_class_methods);
+    groonga_select_ce = zend_register_internal_class(&ce TSRMLS_CC);
+    groonga_select_ce->create_object = groonga_select_ctor;
 
     /* 例外用クラスの登録 */
     INIT_CLASS_ENTRY(ce, "GroongaException", NULL);
@@ -210,4 +239,25 @@ PHP_MINFO_FUNCTION(groonga)
 #   include "classes/command.h"
 #endif
 
+#ifndef HAVE_PROONGA_CLASS_DELETE
+#   include "classes/delete.h"
 #endif
+
+#ifndef HAVE_PROONGA_CLASS_TABLE
+#   include "classes/table.h"
+#endif
+
+#ifndef HAVE_PROONGA_CLASS_LOAD
+#   include "classes/load.h"
+#endif
+
+#ifndef HAVE_PROONGA_CLASS_COLUMN
+#   include "classes/column.h"
+#endif
+
+#ifndef HAVE_PROONGA_CLASS_SELECT
+#   include "classes/select.h"
+#endif
+
+
+#endif      // #ifndef HAVE_PHP_PROONGA
