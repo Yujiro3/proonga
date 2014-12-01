@@ -447,7 +447,7 @@ PHP_METHOD(GTable, tokenFilters)
  */
 PHP_METHOD(GTable, load)
 {
-    zval *zload, *zvalues = NULL;
+    zval *zload, *zvalues = NULL, retval;
 
     /* 引数の受け取り */
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|z", &zvalues) == FAILURE) {
@@ -459,26 +459,14 @@ PHP_METHOD(GTable, load)
     object_init_ex(zload, groonga_load_ce);
 
     /* $load->__construct($this) */
-    zend_call_method_with_1_params(
-        (zval **)&zload, Z_OBJCE_P(zload), 
-        NULL, "__construct", 
-        NULL, getThis()
-    );
+    CALL_METHOD1(GLoad, __construct, NULL, zload, getThis());
 
     if (NULL != zvalues) {
         /* $load->values($values) */
-        zend_call_method_with_1_params(
-            (zval **)&zload, Z_OBJCE_P(zload), 
-            NULL, "values", 
-            NULL, zvalues
-        );
+        CALL_METHOD1(GLoad, values, &retval, zload, zvalues);
 
         /* $load->exec() */
-        zend_call_method_with_0_params(
-            (zval **)&zload, Z_OBJCE_P(zload), 
-            NULL, "exec", 
-            NULL
-        );
+        CALL_METHOD(GLoad, exec, &retval, zload);
     }
 
     /* 返り値へオブジェクトを渡す */
@@ -506,11 +494,7 @@ PHP_METHOD(GTable, delete)
     object_init_ex(zdelete, groonga_delete_ce);
 
     /* $delete->__construct($this) */
-    zend_call_method_with_1_params(
-        (zval **)&zdelete, Z_OBJCE_P(zdelete), 
-        NULL, "__construct", 
-        NULL, getThis()
-    );
+    CALL_METHOD1(GDelete, __construct, NULL, zdelete, getThis());
 
     /* 返り値へオブジェクトを渡す */
     RETURN_ZVAL(zdelete, 1, 0);
@@ -540,12 +524,7 @@ PHP_METHOD(GTable, column)
 
     /* $column->__construct($this, $name) */
     ZVAL_STRINGL(&zname, name, name_len, 0);    
-
-    zend_call_method_with_2_params(
-        (zval **)&zcolumn, Z_OBJCE_P(zcolumn), 
-        NULL, "__construct", 
-        NULL, getThis(), &zname
-    );
+    CALL_METHOD2(GColumn, __construct, NULL, zcolumn, getThis(), &zname);
 
     /* 返り値へオブジェクトを渡す */
     RETURN_ZVAL(zcolumn, 1, 0);
@@ -572,11 +551,7 @@ PHP_METHOD(GTable, select)
     object_init_ex(zselect, groonga_select_ce);
 
     /* $select->__construct($this) */
-    zend_call_method_with_1_params(
-        (zval **)&zselect, Z_OBJCE_P(zselect), 
-        NULL, "__construct", 
-        NULL, getThis()
-    );
+    CALL_METHOD1(GSelect, __construct, NULL, zselect, getThis());
 
     /* 返り値へオブジェクトを渡す */
     RETURN_ZVAL(zselect, 1, 0);
