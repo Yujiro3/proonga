@@ -63,6 +63,7 @@ PHP_METHOD(GTable, remove);
 PHP_METHOD(GTable, rename);
 PHP_METHOD(GTable, dump);
 PHP_METHOD(GTable, truncate);
+PHP_METHOD(GTable, columnList);
 
 
 ZEND_BEGIN_ARG_INFO_EX(GTable___construct, 0, ZEND_RETURN_VALUE, 2)
@@ -127,6 +128,7 @@ zend_function_entry groonga_table_class_methods[] = {
     PHP_ME(GTable, rename,              GTable_1_param,     ZEND_ACC_PUBLIC)
     PHP_ME(GTable, dump,                GTable_0_param,     ZEND_ACC_PUBLIC)
     PHP_ME(GTable, truncate,            GTable_0_param,     ZEND_ACC_PUBLIC)
+    PHP_ME(GTable, columnList,          GTable_0_param,     ZEND_ACC_PUBLIC)
 
     PHP_FE_END    /* Must be the last line in groonga_functions[] */
 };
@@ -788,6 +790,45 @@ PHP_METHOD(GTable, truncate)
     grn_obj_unlink(self->ctx, command);
 
     RETURN_ZVAL(getThis(), 1, 0);
+}
+
+/**
+ * カラム一覧を出力
+ *
+ * @access public
+ * @param string value
+ * @return object self
+ */
+PHP_METHOD(GTable, columnList)
+{
+    groonga_table_t *self;
+    grn_obj *command;
+
+    /* 引数の受け取り */
+    if (zend_parse_parameters_none() != SUCCESS) {
+        RETURN_FALSE;
+    }
+    self = (groonga_table_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
+
+    /* コマンド取得 */
+    if (!proonga_command(self->ctx, &command, "column_list" TSRMLS_CC)) {
+        RETURN_FALSE;
+    }
+
+    /* 変数へ文字列を設定 */
+    if (!proonga_command_set(self->ctx, command, "table", self->name TSRMLS_CC)) {
+        RETURN_FALSE;
+    }
+
+    /* コマンドの実行 */
+    if (!proonga_command_exec(self->ctx, command, return_value, 0 TSRMLS_CC)) {
+        RETURN_FALSE;
+    }
+
+    /* メモリ解放 */
+    grn_obj_unlink(self->ctx, command);
+
+    return ;
 }
 
 #   endif       /* #ifndef HAVE_PROONGA_CLASS_TABLE */

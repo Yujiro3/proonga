@@ -71,6 +71,14 @@ if (false !== $result) {
 }
 echo "\n-----------\n";
 
+/**
+ * columnListコマンド
+ */
+echo '/_/_/_/_ columnList _/_/_/_/'."\n";
+$reslut = $table->columnList();
+print_r($reslut);
+echo "\n-----------\n";
+
 
 /**
  * removeコマンド
@@ -114,4 +122,5 @@ echo '/_/_/_/_ select _/_/_/_/'."\n";
 $select = $table->select();
 print_r($select);
 echo "\n-----------\n";
+
 
