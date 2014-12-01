@@ -54,6 +54,7 @@ $column->create();
 /* load --table Users [ { "_key": "alice", "name": "Alice" } ] */
 $load = $table->load('[ { "_key": "alice", "name": "Alice" } ]');
 
+/* delete --table Users --key alice */
 $delete = $table->delete();
 $delete->key = 'alice';
 $result = $delete->exec();

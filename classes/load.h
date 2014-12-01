@@ -48,7 +48,7 @@ PHP_METHOD(GLoad, values);
 PHP_METHOD(GLoad, table);
 PHP_METHOD(GLoad, columns);
 PHP_METHOD(GLoad, ifexists);
-PHP_METHOD(GLoad, input_type);
+PHP_METHOD(GLoad, inputType);
 PHP_METHOD(GLoad, each);
 PHP_METHOD(GLoad, exec);
 
@@ -83,7 +83,7 @@ zend_function_entry groonga_load_class_methods[] = {
     PHP_ME(GLoad, table,       GLoad_1_param,     ZEND_ACC_PUBLIC)
     PHP_ME(GLoad, columns,     GLoad_1_param,     ZEND_ACC_PUBLIC)
     PHP_ME(GLoad, ifexists,    GLoad_1_param,     ZEND_ACC_PUBLIC)
-    PHP_ME(GLoad, input_type,  GLoad_1_param,     ZEND_ACC_PUBLIC)
+    PHP_ME(GLoad, inputType,   GLoad_1_param,     ZEND_ACC_PUBLIC)
     PHP_ME(GLoad, each,        GLoad_1_param,     ZEND_ACC_PUBLIC)
     PHP_ME(GLoad, exec,        GLoad_0_param,     ZEND_ACC_PUBLIC)
 
@@ -95,7 +95,6 @@ zend_function_entry groonga_load_class_methods[] = {
  *
  * @access public
  * @param  object $groonga
- * @param  string $command
  * @return void
  */
 PHP_METHOD(GLoad, __construct)
@@ -265,7 +264,7 @@ PHP_METHOD(GLoad, ifexists)
  * @param string   $value
  * @return boolean
  */
-PHP_METHOD(GLoad, input_type)
+PHP_METHOD(GLoad, inputType)
 {
     groonga_load_t *self;
     char *value;

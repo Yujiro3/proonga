@@ -23,6 +23,10 @@ The PHP bindings of Groonga.
     # cd /etc/php5/conf.d
     # ln -s ../mods-available/proonga.ini ./30-proonga.ini
     
+内部でphp_json_decode_exを使用しています。
+json-1.2.1を読み込んでからproongaを読み込むように
+設定してください。
+    
 ### 接続 ###
 
 ```php

@@ -162,7 +162,7 @@ PHP_METHOD(GTable, __construct)
 
     /* テーブル名をセット */
     self->name = emalloc(name_len);
-    memcpy(self->name, name, name_len);
+    strcpy(self->name, name);
 
     /* Groonga組み込みコマンドの取得 */
     if (!proonga_command(self->ctx, &self->command, "table_create" TSRMLS_CC)) {
@@ -684,7 +684,7 @@ PHP_METHOD(GTable, rename)
     /* テーブル名の変更 */
     efree(self->name);
     self->name = emalloc(name_len);
-    memcpy(self->name, name, name_len);
+    strcpy(self->name, name);
 
     RETURN_ZVAL(getThis(), 1, 0);
 }
