@@ -213,13 +213,8 @@ PHP_METHOD(Groonga, command)
     object_init_ex(zcommand, groonga_command_ce);
 
     /* $command->__construct($this, $cmd_name) */
-    ZVAL_STRINGL(&zcmdname, command, command_len, 0);    
-
-    zend_call_method_with_2_params(
-        (zval **)&zcommand, Z_OBJCE_P(zcommand), 
-        NULL, "__construct", 
-        NULL, getThis(), &zcmdname
-    );
+    ZVAL_STRINGL(&zcmdname, command, command_len, 0);
+    CALL_METHOD2(GCommand, __construct, NULL, zcommand, getThis(), &zcmdname);
 
     /* 返り値へオブジェクトを渡す */
     RETURN_ZVAL(zcommand, 1, 0);
@@ -388,12 +383,8 @@ PHP_METHOD(Groonga, table)
     object_init_ex(ztable, groonga_table_ce);
 
     /* $table->__construct($this, $name) */
-    ZVAL_STRINGL(&zname, table, table_len, 0);    
-    zend_call_method_with_2_params(
-        (zval **)&ztable, Z_OBJCE_P(ztable), 
-        NULL, "__construct", 
-        NULL, getThis(), &zname
-    );
+    ZVAL_STRINGL(&zname, table, table_len, 0);
+    CALL_METHOD2(GTable, __construct, NULL, ztable, getThis(), &zname);
 
     /* 返り値へオブジェクトを渡す */
     RETURN_ZVAL(ztable, 1, 0);
