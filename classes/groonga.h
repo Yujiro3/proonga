@@ -45,6 +45,7 @@ typedef struct {
  */
 PHP_METHOD(Groonga, __construct);
 PHP_METHOD(Groonga, __destruct);
+PHP_METHOD(Groonga, query);
 PHP_METHOD(Groonga, command);
 PHP_METHOD(Groonga, status);
 PHP_METHOD(Groonga, tableList);
@@ -57,6 +58,12 @@ ZEND_BEGIN_ARG_INFO_EX(Groonga___construct, 0, ZEND_RETURN_VALUE, 1)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(Groonga___destruct, 0, ZEND_RETURN_VALUE, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(Groonga_query, 0, ZEND_RETURN_VALUE, 1)
+    ZEND_ARG_INFO(0, query)
+    ZEND_ARG_INFO(0, assoc)
+    ZEND_ARG_INFO(0, flag)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(Groonga_command, 0, ZEND_RETURN_VALUE, 1)
@@ -91,8 +98,9 @@ extern zend_function_entry groonga_class_methods[];
  */
  
 zend_function_entry groonga_class_methods[] = {
-    PHP_ME(Groonga, __construct, Groonga___construct, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
-    PHP_ME(Groonga, __destruct,  Groonga___destruct,  ZEND_ACC_PUBLIC)
+    PHP_ME(Groonga, __construct, Groonga___construct, ZEND_ACC_CTOR | ZEND_ACC_PUBLIC)
+    PHP_ME(Groonga, __destruct,  Groonga___destruct,  ZEND_ACC_DTOR | ZEND_ACC_PUBLIC)
+    PHP_ME(Groonga, query,       Groonga_query,       ZEND_ACC_PUBLIC)
     PHP_ME(Groonga, command,     Groonga_command,     ZEND_ACC_PUBLIC)
     PHP_ME(Groonga, status,      Groonga_status,      ZEND_ACC_PUBLIC)
     PHP_ME(Groonga, tableList,   Groonga_tableList,   ZEND_ACC_PUBLIC)
@@ -187,6 +195,47 @@ PHP_METHOD(Groonga, __destruct)
         }
 
         grn_ctx_fin(self->ctx);
+    }
+}
+
+/**
+ * Groongaクラス関数:クエリの実行
+ *
+ * @param string query
+ * @param boolean 結果の形式  1:array 0:json
+ * @param integer flags
+ * @return mixed 結果情報
+ */
+PHP_METHOD(Groonga, query)
+{
+    zend_bool zbool = 0;
+    groonga_t *self;
+    char *query = NULL, *res = NULL;
+    uint length;
+    long flags = 0, recv_flags;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|bl", &query, &length, &zbool, &flags) == FAILURE) {
+        RETURN_FALSE;
+    }
+    self = (groonga_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
+
+    grn_ctx_send(self->ctx, query, length, flags);
+    if (GRN_SUCCESS == self->ctx->rc) {
+        grn_ctx_recv(self->ctx, &res, &length, &recv_flags);
+    }
+
+    if (GRN_SUCCESS != self->ctx->rc) {
+        RETURN_FALSE;
+    }
+
+    if (NULL == res) {
+        RETURN_FALSE;
+    }
+
+    if (zbool) {
+        php_json_decode_ex(return_value, res, length, PHP_JSON_OBJECT_AS_ARRAY, JSON_PARSER_GROONGA_DEPTH TSRMLS_CC);
+    } else {
+        RETURN_STRINGL(res, length, 1);
     }
 }
 

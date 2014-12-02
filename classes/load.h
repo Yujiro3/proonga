@@ -44,6 +44,8 @@ typedef struct {
  */
 PHP_METHOD(GLoad, __construct);
 PHP_METHOD(GLoad, __destruct);
+PHP_METHOD(GLoad, __set);
+PHP_METHOD(GLoad, __get);
 PHP_METHOD(GLoad, values);
 PHP_METHOD(GLoad, table);
 PHP_METHOD(GLoad, columns);
@@ -58,6 +60,15 @@ ZEND_BEGIN_ARG_INFO_EX(GLoad___construct, 0, ZEND_RETURN_VALUE, 1)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(GLoad___destruct, 0, ZEND_RETURN_VALUE, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(GLoad___set, 0, ZEND_RETURN_VALUE, 2)
+    ZEND_ARG_INFO(0, key)
+    ZEND_ARG_INFO(0, value)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(GLoad___get, 0, ZEND_RETURN_VALUE, 1)
+    ZEND_ARG_INFO(0, key)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(GLoad_1_param, 0, ZEND_RETURN_VALUE, 1)
@@ -79,6 +90,8 @@ extern zend_function_entry groonga_load_class_methods[];
 zend_function_entry groonga_load_class_methods[] = {
     PHP_ME(GLoad, __construct, GLoad___construct, ZEND_ACC_CTOR | ZEND_ACC_PUBLIC)
     PHP_ME(GLoad, __destruct,  GLoad___destruct,  ZEND_ACC_DTOR | ZEND_ACC_PUBLIC)
+    PHP_ME(GLoad, __set,       GLoad___set,       ZEND_ACC_PUBLIC)
+    PHP_ME(GLoad, __get,       GLoad___get,       ZEND_ACC_PUBLIC)
     PHP_ME(GLoad, values,      GLoad_1_param,     ZEND_ACC_PUBLIC)
     PHP_ME(GLoad, table,       GLoad_1_param,     ZEND_ACC_PUBLIC)
     PHP_ME(GLoad, columns,     GLoad_1_param,     ZEND_ACC_PUBLIC)
@@ -138,6 +151,62 @@ PHP_METHOD(GLoad, __destruct)
     self = (groonga_load_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     grn_obj_unlink(self->ctx, self->command);
+}
+
+/**
+ * 変数設定
+ *
+ * @access public
+ * @param string   $key
+ * @param string   $value
+ * @return boolean
+ */
+PHP_METHOD(GLoad, __set)
+{
+    groonga_load_t *self;
+    char *key, *value;
+    uint key_len, value_len;
+
+    /* 引数の受け取り */
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss", &key, &key_len, &value, &value_len) == FAILURE) {
+        RETURN_FALSE;
+    }
+    self = (groonga_load_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
+
+    /* 変数の設定 */
+    if (!proonga_command_set(self->ctx, self->command, key, value TSRMLS_CC)) {
+        RETURN_FALSE;
+    }
+    
+    RETURN_TRUE;
+}
+
+/**
+ * 変数取得
+ *
+ * @access public
+ * @param string   $key
+ * @param string   $value
+ * @return boolean
+ */
+PHP_METHOD(GLoad, __get)
+{
+    groonga_load_t *self;
+    char *key;
+    uint key_len;
+
+    /* 引数の受け取り */
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &key, &key_len) == FAILURE) {
+        RETURN_FALSE;
+    }
+    self = (groonga_load_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
+
+    /* 変数の設定 */
+    if (!proonga_command_get(self->ctx, self->command, key, return_value TSRMLS_CC)) {
+        RETURN_FALSE;
+    }
+    
+    return;
 }
 
 /**

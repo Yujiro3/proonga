@@ -24,6 +24,7 @@ The PHP bindings of Groonga.
     # ln -s ../mods-available/proonga.ini ./30-proonga.ini
     
 内部でphp_json_decode_exを使用しています。
+
 json-1.2.1を読み込んでからproongaを読み込むように
 設定してください。
     
@@ -32,52 +33,35 @@ json-1.2.1を読み込んでからproongaを読み込むように
 ```php
 <?php
 /* オブジェクト生成 */
-$grn = new Groonga('./db/test.db');
+$gdb = new Groonga('./db/test.db');
 ```
 
 ### テーブルの作成 ###
 
 ```php
-/**
- * table_createコマンド
- */
-$table_create = $gdb->command('table_create');
-
 /* table_create --name Users --flags TABLE_HASH_KEY --key_type ShortText */
-$table_create->name     = 'Users';
-$table_create->flags    = 'TABLE_HASH_KEY';
-$table_create->key_type = 'ShortText';
-$table_create->exec();
+$gdb->table('Users')
+    ->flags('TABLE_HASH_KEY')
+    ->keyType('ShortText')
+    ->create();
 ```
 
 ### カラムの作成 ###
 
 ```php
-/**
- * column_createコマンド
- */
-$column_create = $gdb->command('column_create');
-
 /* column_create --table Users --name name --flags COLUMN_SCALAR --type ShortText */
-$column_create->table = 'Users';
-$column_create->name  = 'name';
-$column_create->flags = 'COLUMN_SCALAR';
-$column_create->type  = 'ShortText';
-$column_create->exec();
-
+$gdb->table('Users')
+    ->column('name')
+    ->flags('COLUMN_SCALAR')
+    ->type('ShortText')
+    ->create();
 ```
 
 ### データのロード ###
 
 ```php
-/**
- * column_createコマンド
- */
-$load = $gdb->command('load');
-
 /* load --table Users --values [[...],[...],...] */
-$load->table  = 'Users';
-$load->values = <<< JSON
+$values = <<< JSON
 [
   {
     "_key": "alice",
@@ -108,23 +92,20 @@ $load->values = <<< JSON
   }
 ]
 JSON;
-$load->exec();
+$gdb->table('Users')
+    ->load($values);
 ```
 
 ### データ一覧の取得 ###
 
 ```php
-/**
- * selectコマンド
- */
-$select = $gdb->command('select');
-
 /* select --table Users --match_columns name,location_str,description --query "New York" --output_columns _key,name */
-$select->table          = 'Users';
-$select->match_columns  = 'name,location_str,description';
-$select->query          = '"New York"';
-$select->output_columns = '_key,name';
-$result = $select->exec(true);
+$result = $gdb->table('Users')
+    ->select()
+    ->matchColumns('name,location_str,description')
+    ->query('"New York"')
+    ->outputColumns('_key,name')
+    ->exec(true);
 
 echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_BIGINT_AS_STRING);
 ```

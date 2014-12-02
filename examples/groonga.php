@@ -35,6 +35,12 @@ php -d extension=modules/groonga.so -f examples/groonga.php
 /* DB接続 */
 $gdb = new Groonga('./db/test.db');
 
+echo '/_/_/_/_ query _/_/_/_/'."\n";
+$result = $gdb->query('/d/status.json');
+print_r($result);
+echo "\n-----------\n";
+
+
 echo '/_/_/_/_ status _/_/_/_/'."\n";
 $result = $gdb->status();
 print_r($result);
