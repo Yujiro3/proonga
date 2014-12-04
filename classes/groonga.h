@@ -136,7 +136,8 @@ PHP_METHOD(Groonga, __construct)
     self = (groonga_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
     
     /* grn_ctx構造体を初期化 */
-    if (GRN_SUCCESS != grn_ctx_init(self->ctx, 0)) {
+    self->ctx = grn_ctx_open(0);
+    if (NULL == self->ctx) {
         zend_throw_exception(groonga_exception_ce, "Unable to  finish context.", 0 TSRMLS_CC);
         RETURN_FALSE;
     }
@@ -188,13 +189,12 @@ PHP_METHOD(Groonga, __destruct)
             self->db = NULL;
         }
 
-        /* GQTPとの接続を切断 */
-        if (1 == self->connected) {
-            grn_ctx_close(self->ctx);
-            self->connected = 0;
+        /* コンテキストを開放 */
+        if (GRN_SUCCESS != grn_ctx_close(self->ctx)) {
+            zend_throw_exception(groonga_exception_ce, "Unable to close context.", 0 TSRMLS_CC);
+            RETURN_FALSE;
         }
-
-        grn_ctx_fin(self->ctx);
+        self->connected = 0;
     }
 }
 
