@@ -33,6 +33,9 @@
 #include <groonga.h>
 #include "php.h"
 #include "ext/json/php_json.h"
+#include "ext/standard/url.h"
+#include "ext/standard/php_http.h"
+#include "ext/standard/php_smart_str.h"
 
 #ifndef HAVE_PHP_GROONGA_H
 #   include "php_groonga.h"
@@ -41,6 +44,142 @@
 #ifndef HAVE_PROONGA_COMMAND_H
 #   include "src/command.h"
 #endif
+
+/**
+ * GQTP接続フラグ
+ *
+ * @var int 0:偽 1:真
+ */
+int gqtpConnected = 0;
+
+/**
+ * GQTPコマンドの生成
+ *
+ * @param grn_ctx    *ctx     コンテキスト
+ * @param zval       *command 文字列オブジェクト
+ * @param const char *name    コマンド名
+ * @return int       0:偽 1:真
+ */
+int prngqtp_command(grn_ctx *ctx, zval *command, const char *name TSRMLS_DC)
+{
+    ZVAL_STRING(command, name, 1);
+    return 1;
+}
+
+/**
+ * GQTPコマンドへ変数設定
+ *
+ * @param grn_ctx    *ctx     コンテキスト
+ * @param zval       *param   配列オブジェクト
+ * @param const char *key     引数名
+ * @param const char *value   値
+ * @return int       0:偽 1:真
+ */
+int prngqtp_command_set(grn_ctx *ctx, zval *param, const char *key, const char *value TSRMLS_DC)
+{
+    zval *zvalue = NULL;
+
+    MAKE_STD_ZVAL(zvalue);
+    ZVAL_STRING(zvalue, value, 0);
+
+    zend_hash_update(Z_ARRVAL_P(param), key, strlen(key), (void **)&zvalue, sizeof(zval*), NULL);
+
+    return 1;
+}
+
+/**
+ * GQTPコマンドへ変数設定
+ *
+ * @param grn_ctx    *ctx     コンテキスト
+ * @param zval       *param   配列オブジェクト
+ * @param const char *key     引数名
+ * @param zval       *retval  値
+ * @return int       0:偽 1:真
+ */
+int prngqtp_command_get(grn_ctx *ctx, zval *param, const char *key, zval *retval TSRMLS_DC)
+{
+    zval *zvalue = NULL;
+     
+    zend_hash_find(Z_ARRVAL_P(param), key, strlen(key), (void **)&zvalue);
+
+    ZVAL_STRINGL(retval, Z_STRVAL_P(zvalue), Z_STRLEN_P(zvalue), 0);
+
+    return 1;
+}
+
+/**
+ * GQTPコマンドの実行
+ *
+ * @param grn_ctx   *ctx       コンテキスト
+ * @param zval      *command   文字列オブジェクト
+ * @param zval      *param     配列オブジェクト
+ * @param zval      *retval    結果情報
+ * @param int       assoc      結果フォーマット
+ * @return int      0:偽 1:真
+ */
+int prngqtp_command_exec(grn_ctx *ctx, zval *zcommand, zval *zparam, zval *retval, int assoc TSRMLS_DC)
+{
+    smart_str query = {0}, param = {0};
+    char *arg_sep = "&", *res = NULL;
+    uint length;
+    long enc_type = PHP_QUERY_RFC1738;
+    long flags = 0, recv_flags;
+
+    smart_str_appendl(&query, "/d/", strlen("/d/"));
+    smart_str_appendl(&query, Z_STRVAL_P(zcommand), Z_STRLEN_P(zcommand));
+    smart_str_appendl(&query, ".json", strlen(".json"));
+
+    if (php_url_encode_hash_ex(HASH_OF(zparam), &param, NULL, 0, NULL, 0, NULL, 0, (Z_TYPE_P(zparam) == IS_OBJECT ? zparam : NULL), arg_sep, enc_type TSRMLS_CC) == FAILURE) {
+        if (param.c) {
+            efree(param.c);
+        }
+    } else {
+        smart_str_appendc(&query, "?");
+        smart_str_appendl(&query, param.c, param.len);
+    }
+
+    grn_ctx_send(ctx, query.c, query.len, flags);
+    if (GRN_SUCCESS == ctx->rc) {
+        grn_ctx_recv(ctx, &res, &length, &recv_flags);
+    }
+
+    if (param.c) {
+        efree(param.c);
+    }
+    if (query.c) {
+        efree(query.c);
+    }
+
+    if (GRN_SUCCESS != ctx->rc) {
+        return 0;
+    }
+
+    if (NULL == res) {
+        return 0;
+    }
+
+    if (assoc) {
+        php_json_decode_ex(retval, res, length, PHP_JSON_OBJECT_AS_ARRAY, JSON_PARSER_GROONGA_DEPTH TSRMLS_CC);
+    } else {
+        ZVAL_STRINGL(retval, res, length, 1);
+    }
+
+    return 1;
+}
+
+/**
+ * メモリの開放
+ *
+ * @param grn_ctx   *ctx       コンテキスト
+ * @param zval      *command   文字列オブジェクト
+ * @param zval      *param     配列オブジェクト
+ * @return int      0:偽 1:真
+ */
+int prngqtp_command_unlink(zval *zcommand, zval *zparam TSRMLS_DC)
+{
+    return 1;
+}
+
 
 /**
  * Groongaコマンドの生成
@@ -120,8 +259,8 @@ int proonga_command_get(grn_ctx *ctx, grn_obj *command, const char *key, zval *r
  *
  * @param grn_ctx   *ctx     コンテキスト
  * @param grn_obj   *command コマンドオブジェクト
- * @param zval      *retval    結果情報
- * @param zval      *retval    結果情報
+ * @param zval      *retval  結果情報
+ * @param int       assoc    結果フォーマット
  * @return int      0:偽 1:真
  */
 int proonga_command_exec(grn_ctx *ctx, grn_obj *command, zval *retval, int assoc TSRMLS_DC)

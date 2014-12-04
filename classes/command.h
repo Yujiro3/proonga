@@ -30,13 +30,17 @@
 #ifndef HAVE_PROONGA_CLASS_COMMAND_H
 #define HAVE_PROONGA_CLASS_COMMAND_H
 
+#ifndef HAVE_PROONGA_COMMAND_H
+#   include "src/command.h"
+#endif
+
 /**
  * GCommandクラス::メンバー変数定義
  */
 typedef struct {
     zend_object std;
     grn_ctx *ctx;
-    grn_obj *command;
+    prn_cmd command;
 } groonga_command_t;
 
 /**
@@ -115,7 +119,7 @@ PHP_METHOD(GCommand, __construct)
     self->ctx = grn_p->ctx;
 
     /* Groonga組み込みコマンドの取得 */
-    if (!proonga_command(self->ctx, &self->command, command TSRMLS_CC)) {
+    if (!PRN_COMMAND(self->ctx, &self->command, command)) {
         char errmsg[64];
         sprintf(errmsg, "Command not found. [%s]", command);
         zend_throw_exception(groonga_exception_ce, errmsg, 0 TSRMLS_CC);
@@ -135,7 +139,7 @@ PHP_METHOD(GCommand, __destruct)
 
     self = (groonga_command_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
-    grn_obj_unlink(self->ctx, self->command);
+    PRN_COMMAND_UNLINK(self->ctx, &self->command);
 }
 
 /**
@@ -158,7 +162,7 @@ PHP_METHOD(GCommand, __set)
     }
     self = (groonga_command_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
-    if (!proonga_command_set(self->ctx, self->command, key, value TSRMLS_CC)) {
+    if (!PRN_COMMAND_SET(self->ctx, &self->command, key, value)) {
         RETURN_FALSE;
     }
 
@@ -184,7 +188,7 @@ PHP_METHOD(GCommand, __get)
     }
     self = (groonga_command_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
-    if (!proonga_command_get(self->ctx, self->command, key, return_value TSRMLS_CC)) {
+    if (!PRN_COMMAND_GET(self->ctx, &self->command, key, return_value)) {
         RETURN_FALSE;
     }
 
@@ -211,7 +215,7 @@ PHP_METHOD(GCommand, exec)
     self = (groonga_command_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* コマンドの実行 */
-    if (!proonga_command_exec(self->ctx, self->command, return_value, 1 TSRMLS_CC)) {
+    if (!PRN_COMMAND_EXEC(self->ctx, &self->command, return_value, 1)) {
         RETURN_FALSE;
     }
 
