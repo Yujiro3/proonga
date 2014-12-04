@@ -229,7 +229,7 @@ PHP_METHOD(GLoad, values)
 
     if (IS_ARRAY == Z_TYPE_P(zvalues)) {
         smart_str buf = {0};
-        php_json_encode(&buf, zvalues, 0 TSRMLS_DC);
+        php_json_encode(&buf, zvalues, 0 TSRMLS_CC);
 
         /* 変数の設定 */
         if (!proonga_command_set(self->ctx, self->command, "values", buf.c TSRMLS_CC)) {

@@ -42,22 +42,6 @@
 #endif
 
 /**
- * Groongaクラスのデストラクタ (メモリ解放)
- *
- * @param groonga_t *self Groongaオブジェクト
- * @return void
- */
-static void groonga_free_storage(groonga_t *self TSRMLS_DC)
-{
-    efree(self->ctx);
-    self->ctx = NULL;
-
-    /* オブジェクトの破棄 */
-    zend_object_std_dtor(&self->std TSRMLS_CC);
-    efree(self);
-}
-
-/**
  * 各Groongaクラスのデストラクタ (メモリ解放)
  *
  * @param roonga_column_t *self カラムオブジェクト
@@ -87,13 +71,10 @@ zend_object_value groonga_ctor(zend_class_entry *ce TSRMLS_DC)
     object_properties_init(&self->std, ce);
     rebuild_object_properties(&self->std);
 
-    self->ctx   = emalloc(sizeof(*self->ctx));
-    self->db    = NULL;
-
     retval.handle = zend_objects_store_put(
         self, 
         (zend_objects_store_dtor_t)zend_objects_destroy_object, 
-        (zend_objects_free_object_storage_t)groonga_free_storage, 
+        (zend_objects_free_object_storage_t)groonga_class_free_storage, 
         NULL TSRMLS_CC
     );
     retval.handlers = zend_get_std_object_handlers();
