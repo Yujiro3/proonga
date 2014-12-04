@@ -30,13 +30,17 @@
 #ifndef HAVE_PROONGA_CLASS_LOAD_H
 #define HAVE_PROONGA_CLASS_LOAD_H
 
+#ifndef HAVE_PROONGA_COMMAND_H
+#   include "src/command.h"
+#endif
+
 /**
  * GLoadクラス::メンバー変数定義
  */
 typedef struct {
     zend_object std;
     grn_ctx *ctx;
-    grn_obj *command;
+    prn_cmd command;
 } groonga_load_t;
 
 /**
@@ -127,12 +131,12 @@ PHP_METHOD(GLoad, __construct)
     self->ctx = grn_p->ctx;
 
     /* Groonga組み込みコマンドの取得 */
-    if (!proonga_command(self->ctx, &self->command, "load" TSRMLS_CC)) {
+    if (!PRN_COMMAND(self->ctx, &self->command, "load")) {
         zend_throw_exception(groonga_exception_ce, "Unable to initialize of load.", 0 TSRMLS_CC);
         RETURN_FALSE;
     }
 
-    if (!proonga_command_set(self->ctx, self->command, "table", grn_p->name TSRMLS_CC)) {
+    if (!PRN_COMMAND_SET(self->ctx, &self->command, "table", grn_p->name)) {
         zend_throw_exception(groonga_exception_ce, "Unable to initialize of load.", 0 TSRMLS_CC);
         RETURN_FALSE;
     }
@@ -150,7 +154,7 @@ PHP_METHOD(GLoad, __destruct)
 
     self = (groonga_load_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
-    grn_obj_unlink(self->ctx, self->command);
+    PRN_COMMAND_UNLINK(self->ctx, &self->command);
 }
 
 /**
@@ -174,7 +178,7 @@ PHP_METHOD(GLoad, __set)
     self = (groonga_load_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!proonga_command_set(self->ctx, self->command, key, value TSRMLS_CC)) {
+    if (!PRN_COMMAND_SET(self->ctx, &self->command, key, value)) {
         RETURN_FALSE;
     }
     
@@ -202,7 +206,7 @@ PHP_METHOD(GLoad, __get)
     self = (groonga_load_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!proonga_command_get(self->ctx, self->command, key, return_value TSRMLS_CC)) {
+    if (!PRN_COMMAND_GET(self->ctx, &self->command, key, return_value)) {
         RETURN_FALSE;
     }
     
@@ -232,12 +236,15 @@ PHP_METHOD(GLoad, values)
         php_json_encode(&buf, zvalues, 0 TSRMLS_CC);
 
         /* 変数の設定 */
-        if (!proonga_command_set(self->ctx, self->command, "values", buf.c TSRMLS_CC)) {
+        if (!PRN_COMMAND_SET(self->ctx, &self->command, "values", buf.c)) {
             RETURN_FALSE;
+        }
+        if (buf.c) {
+            efree(buf.c);
         }
     } else if (IS_STRING == Z_TYPE_P(zvalues)) {
         /* 変数の設定 */
-        if (!proonga_command_set(self->ctx, self->command, "values", Z_STRVAL_P(zvalues) TSRMLS_CC)) {
+        if (!PRN_COMMAND_SET(self->ctx, &self->command, "values", Z_STRVAL_P(zvalues))) {
             RETURN_FALSE;
         }
     }
@@ -265,7 +272,7 @@ PHP_METHOD(GLoad, table)
     self = (groonga_load_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!proonga_command_set(self->ctx, self->command, "table", value TSRMLS_CC)) {
+    if (!PRN_COMMAND_SET(self->ctx, &self->command, "table", value)) {
         RETURN_FALSE;
     }
 
@@ -292,7 +299,7 @@ PHP_METHOD(GLoad, columns)
     self = (groonga_load_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!proonga_command_set(self->ctx, self->command, "columns", value TSRMLS_CC)) {
+    if (!PRN_COMMAND_SET(self->ctx, &self->command, "columns", value)) {
         RETURN_FALSE;
     }
 
@@ -319,7 +326,7 @@ PHP_METHOD(GLoad, ifexists)
     self = (groonga_load_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!proonga_command_set(self->ctx, self->command, "ifexists", value TSRMLS_CC)) {
+    if (!PRN_COMMAND_SET(self->ctx, &self->command, "ifexists", value)) {
         RETURN_FALSE;
     }
 
@@ -346,7 +353,7 @@ PHP_METHOD(GLoad, inputType)
     self = (groonga_load_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!proonga_command_set(self->ctx, self->command, "input_type", value TSRMLS_CC)) {
+    if (!PRN_COMMAND_SET(self->ctx, &self->command, "input_type", value)) {
         RETURN_FALSE;
     }
 
@@ -373,7 +380,7 @@ PHP_METHOD(GLoad, each)
     self = (groonga_load_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!proonga_command_set(self->ctx, self->command, "each", value TSRMLS_CC)) {
+    if (!PRN_COMMAND_SET(self->ctx, &self->command, "each", value)) {
         RETURN_FALSE;
     }
 
@@ -399,7 +406,7 @@ PHP_METHOD(GLoad, exec)
     self = (groonga_load_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* コマンドの実行 */
-    if (!proonga_command_exec(self->ctx, self->command, &retval, 0 TSRMLS_CC)) {
+    if (!PRN_COMMAND_EXEC(self->ctx, &self->command, &retval, 0)) {
         RETURN_FALSE;
     }
 

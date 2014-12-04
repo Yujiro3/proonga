@@ -30,9 +30,47 @@
 #ifndef HAVE_PROONGA_COMMAND_H
 #define HAVE_PROONGA_COMMAND_H
 
+/**
+ * Proonga Command\‘¢‘Ì
+ */
+typedef struct prn_cmd_t {
+    zval zcommand;
+    zval zparam;
+    grn_obj *command;
+} prn_cmd;
+
+int prngqtp_command(grn_ctx *ctx, zval *zcommand, const char *name TSRMLS_DC);
+int prngqtp_command_set(grn_ctx *ctx, zval *zparam, const char *key, const char *value TSRMLS_DC);
+int prngqtp_command_get(grn_ctx *ctx, zval *zparam, const char *key, zval *retval TSRMLS_DC);
+int prngqtp_command_exec(grn_ctx *ctx, zval *zcommand, zval *zparam, zval *retval, int assoc TSRMLS_DC);
+int prngqtp_command_unlink(zval *zcommand, zval *zparam TSRMLS_DC);
+
 int proonga_command(grn_ctx *ctx, grn_obj **command, const char *name TSRMLS_DC);
 int proonga_command_set(grn_ctx *ctx, grn_obj *command, const char *key, const char *value TSRMLS_DC);
 int proonga_command_get(grn_ctx *ctx, grn_obj *command, const char *key, zval *retval TSRMLS_DC);
 int proonga_command_exec(grn_ctx *ctx, grn_obj *command, zval *retval, int assoc TSRMLS_DC);
+
+extern int gqtpConnected;
+
+#define PRN_COMMAND(ctx, cmd, name) ((gqtpConnected == 1) ? \
+    prngqtp_command(ctx, (zval *)&(cmd)->zcommand, name TSRMLS_CC) : \
+    proonga_command(ctx, (prn_cmd *)&(cmd)->command, name TSRMLS_CC))
+
+#define PRN_COMMAND_SET(ctx, cmd, key, val) ((gqtpConnected == 1) ? \
+    prngqtp_command_set(ctx, (zval *)&(cmd)->zparam, key, val TSRMLS_CC) : \
+    proonga_command_set(ctx, (cmd)->command, key, val TSRMLS_CC))
+
+#define PRN_COMMAND_GET(ctx, cmd, key, val) ((gqtpConnected == 1) ? \
+    prngqtp_command_get(ctx, (zval *)&(cmd)->zparam, key, val TSRMLS_CC) : \
+    proonga_command_get(ctx, (cmd)->command, key, val TSRMLS_CC))
+
+#define PRN_COMMAND_EXEC(ctx, cmd, retval, assoc) ((gqtpConnected == 1) ? \
+    prngqtp_command_exec(ctx, (zval *)&(cmd)->zcommand, (zval *)&(cmd)->zparam, retval, assoc TSRMLS_CC) : \
+    proonga_command_exec(ctx, (cmd)->command, retval, assoc TSRMLS_CC))
+
+#define PRN_COMMAND_UNLINK(ctx, cmd) ((gqtpConnected == 1) ? \
+    prngqtp_command_unlink((zval *)&(cmd)->zcommand, (zval *)&(cmd)->zparam TSRMLS_CC) : \
+    grn_obj_unlink(ctx, (cmd)->command))
+
 
 #endif
