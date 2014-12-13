@@ -47,8 +47,10 @@
  * @param roonga_column_t *self カラムオブジェクト
  * @return void
  */
-static void groonga_class_free_storage(groonga_command_t *self TSRMLS_DC)
+static void groonga_class_free_storage(void *arg TSRMLS_DC)
 {
+    groonga_free_t *self = (groonga_free_t *) arg;
+
     /* カラムリストの開放 */
     zend_object_std_dtor(&self->std TSRMLS_CC);
     efree(self);
