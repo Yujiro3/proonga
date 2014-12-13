@@ -30,6 +30,13 @@
 #ifndef HAVE_PROONGA_OBJECT_H
 #define HAVE_PROONGA_OBJECT_H
 
+/**
+ * オブジェクト破棄用構造体
+ */
+typedef struct {
+    zend_object std;
+} groonga_free_t;
+
 zend_object_value groonga_ctor(zend_class_entry *ce TSRMLS_DC);
 zend_object_value groonga_command_ctor(zend_class_entry *ce TSRMLS_DC);
 zend_object_value groonga_delete_ctor(zend_class_entry *ce TSRMLS_DC);
