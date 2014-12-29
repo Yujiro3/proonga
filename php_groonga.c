@@ -67,7 +67,7 @@ static int le_groonga;
 static int groonga_initialized = 0;
 
 /* クラス構造体 */
-zend_class_entry *groonga_ce = NULL;
+zend_class_entry *groonga_database_ce = NULL;
 zend_class_entry *groonga_command_ce = NULL;
 zend_class_entry *groonga_delete_ce = NULL;
 zend_class_entry *groonga_table_ce = NULL;
@@ -138,8 +138,8 @@ PHP_MINIT_FUNCTION(groonga)
 
     /* Groonga(db)クラスの登録 */
     INIT_CLASS_ENTRY(ce, "Groonga", groonga_class_methods);
-    groonga_ce = zend_register_internal_class(&ce TSRMLS_CC);
-    groonga_ce->create_object = groonga_ctor;
+    groonga_database_ce = zend_register_internal_class(&ce TSRMLS_CC);
+    groonga_database_ce->create_object = groonga_ctor;
 
     /* GCommandクラスの登録 */
     INIT_CLASS_ENTRY(ce, "GCommand", groonga_command_class_methods);
