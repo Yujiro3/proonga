@@ -161,13 +161,13 @@ PHP_METHOD(GSelect, __construct)
     self->ctx = grn_p->ctx;
 
     /* Groonga組み込みコマンドの取得 */
-    if (!PRN_COMMAND(self->ctx, &self->command, "select")) {
+    if (!prn_command(self->ctx, &self->command, "select")) {
         zend_throw_exception(groonga_exception_ce, "Unable to initialize of select.", 0 TSRMLS_CC);
         RETURN_FALSE;
     }
 
     /* テーブル名を設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "table", grn_p->name)) {
+    if (!PRN_COMMAND_SET(self->ctx, &self->command, "table", Z_STRVAL(grn_p->name))) {
         zend_throw_exception(groonga_exception_ce, "Unable to initialize of select.", 0 TSRMLS_CC);
         RETURN_FALSE;
     }
@@ -269,7 +269,7 @@ PHP_METHOD(GSelect, matchColumns)
         RETURN_FALSE;
     }
 
-    RETURN_ZVAL(getThis(), 1, 0);
+    RETURN_CHAIN();
 }
 
 /**
@@ -296,7 +296,7 @@ PHP_METHOD(GSelect, query)
         RETURN_FALSE;
     }
 
-    RETURN_ZVAL(getThis(), 1, 0);
+    RETURN_CHAIN();
 }
 
 /**
@@ -323,7 +323,7 @@ PHP_METHOD(GSelect, filter)
         RETURN_FALSE;
     }
 
-    RETURN_ZVAL(getThis(), 1, 0);
+    RETURN_CHAIN();
 }
 
 /**
@@ -350,7 +350,7 @@ PHP_METHOD(GSelect, scorer)
         RETURN_FALSE;
     }
 
-    RETURN_ZVAL(getThis(), 1, 0);
+    RETURN_CHAIN();
 }
 
 /**
@@ -377,7 +377,7 @@ PHP_METHOD(GSelect, sortby)
         RETURN_FALSE;
     }
 
-    RETURN_ZVAL(getThis(), 1, 0);
+    RETURN_CHAIN();
 }
 
 /**
@@ -404,7 +404,7 @@ PHP_METHOD(GSelect, outputColumns)
         RETURN_FALSE;
     }
 
-    RETURN_ZVAL(getThis(), 1, 0);
+    RETURN_CHAIN();
 }
 
 /**
@@ -431,7 +431,7 @@ PHP_METHOD(GSelect, offset)
         RETURN_FALSE;
     }
 
-    RETURN_ZVAL(getThis(), 1, 0);
+    RETURN_CHAIN();
 }
 
 /**
@@ -458,7 +458,7 @@ PHP_METHOD(GSelect, limit)
         RETURN_FALSE;
     }
 
-    RETURN_ZVAL(getThis(), 1, 0);
+    RETURN_CHAIN();
 }
 
 /**
@@ -485,7 +485,7 @@ PHP_METHOD(GSelect, drilldown)
         RETURN_FALSE;
     }
 
-    RETURN_ZVAL(getThis(), 1, 0);
+    RETURN_CHAIN();
 }
 
 /**
@@ -512,7 +512,7 @@ PHP_METHOD(GSelect, drilldownSortby)
         RETURN_FALSE;
     }
 
-    RETURN_ZVAL(getThis(), 1, 0);
+    RETURN_CHAIN();
 }
 
 /**
@@ -539,7 +539,7 @@ PHP_METHOD(GSelect, drilldownOutputColumns)
         RETURN_FALSE;
     }
 
-    RETURN_ZVAL(getThis(), 1, 0);
+    RETURN_CHAIN();
 }
 
 /**
@@ -566,7 +566,7 @@ PHP_METHOD(GSelect, drilldownOffset)
         RETURN_FALSE;
     }
 
-    RETURN_ZVAL(getThis(), 1, 0);
+    RETURN_CHAIN();
 }
 
 /**
@@ -593,7 +593,7 @@ PHP_METHOD(GSelect, drilldownLimit)
         RETURN_FALSE;
     }
 
-    RETURN_ZVAL(getThis(), 1, 0);
+    RETURN_CHAIN();
 }
 
 /**
@@ -620,7 +620,7 @@ PHP_METHOD(GSelect, cache)
         RETURN_FALSE;
     }
 
-    RETURN_ZVAL(getThis(), 1, 0);
+    RETURN_CHAIN();
 }
 
 /**
@@ -647,7 +647,7 @@ PHP_METHOD(GSelect, matchEscalationThreshold)
         RETURN_FALSE;
     }
 
-    RETURN_ZVAL(getThis(), 1, 0);
+    RETURN_CHAIN();
 }
 
 /**
@@ -674,7 +674,7 @@ PHP_METHOD(GSelect, queryExpansion)
         RETURN_FALSE;
     }
 
-    RETURN_ZVAL(getThis(), 1, 0);
+    RETURN_CHAIN();
 }
 
 /**
@@ -701,7 +701,7 @@ PHP_METHOD(GSelect, queryFlags)
         RETURN_FALSE;
     }
 
-    RETURN_ZVAL(getThis(), 1, 0);
+    RETURN_CHAIN();
 }
 
 /**
@@ -728,7 +728,7 @@ PHP_METHOD(GSelect, queryExpander)
         RETURN_FALSE;
     }
 
-    RETURN_ZVAL(getThis(), 1, 0);
+    RETURN_CHAIN();
 }
 
 /**
@@ -755,7 +755,7 @@ PHP_METHOD(GSelect, adjuster)
         RETURN_FALSE;
     }
 
-    RETURN_ZVAL(getThis(), 1, 0);
+    RETURN_CHAIN();
 }
 
 /**

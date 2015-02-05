@@ -131,12 +131,12 @@ PHP_METHOD(GLoad, __construct)
     self->ctx = grn_p->ctx;
 
     /* Groonga組み込みコマンドの取得 */
-    if (!PRN_COMMAND(self->ctx, &self->command, "load")) {
+    if (!prn_command(self->ctx, &self->command, "load")) {
         zend_throw_exception(groonga_exception_ce, "Unable to initialize of load.", 0 TSRMLS_CC);
         RETURN_FALSE;
     }
 
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "table", grn_p->name)) {
+    if (!PRN_COMMAND_SET(self->ctx, &self->command, "table", Z_STRVAL(grn_p->name))) {
         zend_throw_exception(groonga_exception_ce, "Unable to initialize of load.", 0 TSRMLS_CC);
         RETURN_FALSE;
     }
@@ -249,7 +249,7 @@ PHP_METHOD(GLoad, values)
         }
     }
 
-    RETURN_ZVAL(getThis(), 1, 0);
+    RETURN_CHAIN();
 }
 
 /**
@@ -276,7 +276,7 @@ PHP_METHOD(GLoad, table)
         RETURN_FALSE;
     }
 
-    RETURN_ZVAL(getThis(), 1, 0);
+    RETURN_CHAIN();
 }
 
 /**
@@ -303,7 +303,7 @@ PHP_METHOD(GLoad, columns)
         RETURN_FALSE;
     }
 
-    RETURN_ZVAL(getThis(), 1, 0);
+    RETURN_CHAIN();
 }
 
 /**
@@ -330,7 +330,7 @@ PHP_METHOD(GLoad, ifexists)
         RETURN_FALSE;
     }
 
-    RETURN_ZVAL(getThis(), 1, 0);
+    RETURN_CHAIN();
 }
 
 /**
@@ -357,7 +357,7 @@ PHP_METHOD(GLoad, inputType)
         RETURN_FALSE;
     }
 
-    RETURN_ZVAL(getThis(), 1, 0);
+    RETURN_CHAIN();
 }
 
 /**
@@ -384,7 +384,7 @@ PHP_METHOD(GLoad, each)
         RETURN_FALSE;
     }
 
-    RETURN_ZVAL(getThis(), 1, 0);
+    RETURN_CHAIN();
 }
 
 /**
@@ -415,7 +415,7 @@ PHP_METHOD(GLoad, exec)
         RETURN_FALSE;    
     }
 
-    RETURN_ZVAL(getThis(), 1, 0);
+    RETURN_CHAIN();
 }
 
 #   endif       /* #ifndef HAVE_PROONGA_CLASS_LOAD */

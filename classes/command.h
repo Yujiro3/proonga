@@ -119,7 +119,7 @@ PHP_METHOD(GCommand, __construct)
     self->ctx = grn_p->ctx;
 
     /* Groonga組み込みコマンドの取得 */
-    if (!PRN_COMMAND(self->ctx, &self->command, command)) {
+    if (!prn_command(self->ctx, &self->command, command)) {
         char errmsg[64];
         sprintf(errmsg, "Command not found. [%s]", command);
         zend_throw_exception(groonga_exception_ce, errmsg, 0 TSRMLS_CC);

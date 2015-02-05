@@ -62,7 +62,7 @@ int gqtpConnected = 0;
  */
 int prngqtp_command(grn_ctx *ctx, zval *command, const char *name TSRMLS_DC)
 {
-    ZVAL_STRING(command, name, 1);
+    ZVAL_STRING(command, name, 0);
     return 1;
 }
 
@@ -123,7 +123,7 @@ int prngqtp_command_exec(grn_ctx *ctx, zval *zcommand, zval *zparam, zval *retva
     char *arg_sep = "&", *res = NULL;
     uint length;
     long enc_type = PHP_QUERY_RFC1738;
-    long flags = 0, recv_flags;
+    long flags = 0;
 
     smart_str_appendl(&query, "/d/", strlen("/d/"));
     smart_str_appendl(&query, Z_STRVAL_P(zcommand), Z_STRLEN_P(zcommand));
@@ -134,12 +134,13 @@ int prngqtp_command_exec(grn_ctx *ctx, zval *zcommand, zval *zparam, zval *retva
             efree(param.c);
         }
     } else {
-        smart_str_appendc(&query, "?");
+        smart_str_appendc(&query, '?');
         smart_str_appendl(&query, param.c, param.len);
     }
 
     grn_ctx_send(ctx, query.c, query.len, flags);
     if (GRN_SUCCESS == ctx->rc) {
+        int recv_flags;
         grn_ctx_recv(ctx, &res, &length, &recv_flags);
     }
 
@@ -290,7 +291,7 @@ int proonga_command_exec(grn_ctx *ctx, grn_obj *command, zval *retval, int assoc
                 JSON_PARSER_GROONGA_DEPTH TSRMLS_CC
             );
         } else {
-            ZVAL_STRINGL(retval, GRN_TEXT_VALUE(info.outbuf), (int)GRN_TEXT_LEN(info.outbuf), 1);
+            ZVAL_STRINGL(retval, GRN_TEXT_VALUE(info.outbuf), (int)GRN_TEXT_LEN(info.outbuf), 0);
         }
     } // if (NULL != retval)
 
@@ -301,6 +302,23 @@ int proonga_command_exec(grn_ctx *ctx, grn_obj *command, zval *retval, int assoc
     grn_expr_clear_vars(ctx, command);
 
     return 1;
+}
+
+/**
+ * コマンドの生成
+ *
+ * @param grn_ctx    *ctx     コンテキスト
+ * @param prn_cmd    *command コマンドオブジェクト
+ * @param const char *name    コマンド名
+ * @return int      0:偽 1:真
+ */
+int prn_command(grn_ctx *ctx, prn_cmd *cmd, const char *name)
+{
+    if (gqtpConnected == 1) {
+        return prngqtp_command(ctx, &cmd->zcommand, name TSRMLS_CC);
+    } else {
+        return proonga_command(ctx, &cmd->command, name TSRMLS_CC);
+    }
 }
 
 #endif      /* #ifndef HAVE_PROONGA_COMMAND */

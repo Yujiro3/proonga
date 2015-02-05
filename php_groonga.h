@@ -78,15 +78,14 @@ ZEND_BEGIN_MODULE_GLOBALS(groonga)
 ZEND_END_MODULE_GLOBALS(groonga)
 */
 
-/* In every utility function you add that needs to use variables 
-   in php_groonga_globals, call TSRMLS_FETCH(); after declaring other 
-   variables used by that function, or better yet, pass in TSRMLS_CC
-   after the last function argument and declare your utility function
-   with TSRMLS_DC after the last declared argument.  Always refer to
-   the globals in your function as GROONGA_G(variable).  You are 
-   encouraged to rename these macros something shorter, see
-   examples in any other php module directory.
-*/
+/**
+ * 自身のオブジェクトを返すマクロ
+ */
+#define RETURN_CHAIN() do {\
+    Z_SET_ISREF_P(return_value); \
+    Z_TYPE_P(return_value) = IS_OBJECT; \
+    ZVAL_ZVAL(return_value, getThis(), 1, 0);\
+} while(0)
 
 /**
  * メンバー定数定義:定型マクロ

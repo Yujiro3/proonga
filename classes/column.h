@@ -41,8 +41,8 @@ typedef struct {
     zend_object std;
     grn_ctx *ctx;
     prn_cmd command;
-    char *table;
-    char *name;
+    zval table;
+    zval name;
 } groonga_column_t;
 
 /**
@@ -134,25 +134,23 @@ PHP_METHOD(GColumn, __construct)
     self->ctx = grn_p->ctx;
 
     /* テーブル名をセット */
-    self->table = emalloc(strlen(grn_p->name));
-    strcpy(self->table, grn_p->name);
+    ZVAL_STRINGL(&self->table, Z_STRVAL(grn_p->name), Z_STRLEN(grn_p->name), 0);
 
     /* カラム名をセット */
-    self->name = emalloc(name_len);
-    strcpy(self->name, name);
+    ZVAL_STRINGL(&self->name, name, name_len, 0);
 
     /* Groonga組み込みコマンドの取得 */
-    if (!PRN_COMMAND(self->ctx, &self->command, "column_create")) {
+    if (!prn_command(self->ctx, &self->command, "column_create")) {
         zend_throw_exception(groonga_exception_ce, "Unable to initialize of column.", 0 TSRMLS_CC);
         RETURN_FALSE;
     }
 
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "table", self->table)) {
+    if (!PRN_COMMAND_SET(self->ctx, &self->command, "table", Z_STRVAL(self->table))) {
         zend_throw_exception(groonga_exception_ce, "Unable to initialize of column.", 0 TSRMLS_CC);
         RETURN_FALSE;
     }
 
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "name", self->name)) {
+    if (!PRN_COMMAND_SET(self->ctx, &self->command, "name", Z_STRVAL(self->name))) {
         zend_throw_exception(groonga_exception_ce, "Unable to initialize of column.", 0 TSRMLS_CC);
         RETURN_FALSE;
     }
@@ -171,9 +169,6 @@ PHP_METHOD(GColumn, __destruct)
     self = (groonga_column_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     PRN_COMMAND_UNLINK(self->ctx, &self->command);
-
-    efree(self->name);
-    efree(self->table);
 }
 
 /**
@@ -256,7 +251,7 @@ PHP_METHOD(GColumn, flags)
         RETURN_FALSE;
     }
 
-    RETURN_ZVAL(getThis(), 1, 0);
+    RETURN_CHAIN();
 }
 
 /**
@@ -283,7 +278,7 @@ PHP_METHOD(GColumn, type)
         RETURN_FALSE;
     }
 
-    RETURN_ZVAL(getThis(), 1, 0);
+    RETURN_CHAIN();
 }
 
 /**
@@ -310,7 +305,7 @@ PHP_METHOD(GColumn, source)
         RETURN_FALSE;
     }
 
-    RETURN_ZVAL(getThis(), 1, 0);
+    RETURN_CHAIN();
 }
 
 /**
@@ -341,7 +336,7 @@ PHP_METHOD(GColumn, create)
         RETURN_FALSE;    
     }
 
-    RETURN_ZVAL(getThis(), 1, 0);
+    RETURN_CHAIN();
 }
 
 /**
@@ -363,17 +358,17 @@ PHP_METHOD(GColumn, remove)
     self = (groonga_column_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* コマンド取得 */
-    if (!PRN_COMMAND(self->ctx, &command, "column_remove")) {
+    if (!prn_command(self->ctx, &command, "column_remove")) {
         RETURN_FALSE;
     }
 
     /* テーブル名を設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &command, "table", self->table)) {
+    if (!PRN_COMMAND_SET(self->ctx, &command, "table", Z_STRVAL(self->table))) {
         RETURN_FALSE;
     }
 
     /* カラム名を設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &command, "name", self->name)) {
+    if (!PRN_COMMAND_SET(self->ctx, &command, "name", Z_STRVAL(self->name))) {
         RETURN_FALSE;
     }
 
@@ -390,7 +385,7 @@ PHP_METHOD(GColumn, remove)
         RETURN_FALSE;    
     }
 
-    RETURN_ZVAL(getThis(), 1, 0);
+    RETURN_CHAIN();
 }
 
 /**
@@ -414,17 +409,17 @@ PHP_METHOD(GColumn, rename)
     self = (groonga_column_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* コマンド取得 */
-    if (!PRN_COMMAND(self->ctx, &command, "column_rename")) {
+    if (!prn_command(self->ctx, &command, "column_rename")) {
         RETURN_FALSE;
     }
 
     /* テーブル名を設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &command, "table", self->table)) {
+    if (!PRN_COMMAND_SET(self->ctx, &command, "table", Z_STRVAL(self->table))) {
         RETURN_FALSE;
     }
 
     /* カラム名を設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &command, "name", self->name)) {
+    if (!PRN_COMMAND_SET(self->ctx, &command, "name", Z_STRVAL(self->name))) {
         RETURN_FALSE;
     }
 
@@ -447,11 +442,9 @@ PHP_METHOD(GColumn, rename)
     }
 
     /* テーブル名の変更 */
-    efree(self->name);
-    self->name = emalloc(name_len);
-    strcpy(self->name, name);
+    ZVAL_STRINGL(&self->name, name, name_len, 1);
 
-    RETURN_ZVAL(getThis(), 1, 0);
+    RETURN_CHAIN();
 }
 
 
