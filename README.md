@@ -1,6 +1,6 @@
 Groongaクライアント
 ======================
-The PHP bindings of Groonga.
+PHP bindings for Groonga.
 
 利用方法
 ------

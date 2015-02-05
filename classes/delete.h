@@ -126,12 +126,12 @@ PHP_METHOD(GDelete, __construct)
     self->ctx = grn_p->ctx;
 
     /* Groonga組み込みコマンドの取得 */
-    if (!PRN_COMMAND(self->ctx, &self->command, "delete")) {
+    if (!prn_command(self->ctx, &self->command, "delete")) {
         zend_throw_exception(groonga_exception_ce, "Unable to initialize of delete.", 0 TSRMLS_CC);
         RETURN_FALSE;
     }
 
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "table", grn_p->name)) {
+    if (!PRN_COMMAND_SET(self->ctx, &self->command, "table", Z_STRVAL(grn_p->name))) {
         zend_throw_exception(groonga_exception_ce, "Unable to initialize of delete.", 0 TSRMLS_CC);
         RETURN_FALSE;
     }
@@ -232,7 +232,7 @@ PHP_METHOD(GDelete, key)
         RETURN_FALSE;
     }
 
-    RETURN_ZVAL(getThis(), 1, 0);
+    RETURN_CHAIN();
 }
 
 /**
@@ -259,7 +259,7 @@ PHP_METHOD(GDelete, id)
         RETURN_FALSE;
     }
 
-    RETURN_ZVAL(getThis(), 1, 0);
+    RETURN_CHAIN();
 }
 
 /**
@@ -286,7 +286,7 @@ PHP_METHOD(GDelete, filter)
         RETURN_FALSE;
     }
 
-    RETURN_ZVAL(getThis(), 1, 0);
+    RETURN_CHAIN();
 }
 
 /**
@@ -318,7 +318,7 @@ PHP_METHOD(GDelete, exec)
         RETURN_FALSE;    
     }
 
-    RETURN_ZVAL(getThis(), 1, 0);
+    RETURN_CHAIN();
 }
 
 #   endif       /* #ifndef HAVE_PROONGA_CLASS_DELETE */

@@ -30,6 +30,8 @@
 #ifndef HAVE_PROONGA_COMMAND_H
 #define HAVE_PROONGA_COMMAND_H
 
+extern int gqtpConnected;
+
 /**
  * Proonga Command\‘¢‘Ì
  */
@@ -50,7 +52,7 @@ int proonga_command_set(grn_ctx *ctx, grn_obj *command, const char *key, const c
 int proonga_command_get(grn_ctx *ctx, grn_obj *command, const char *key, zval *retval TSRMLS_DC);
 int proonga_command_exec(grn_ctx *ctx, grn_obj *command, zval *retval, int assoc TSRMLS_DC);
 
-extern int gqtpConnected;
+int prn_command(grn_ctx *ctx, prn_cmd *cmd, const char *name);
 
 #define PRN_COMMAND(ctx, cmd, name) ((gqtpConnected == 1) ? \
     prngqtp_command(ctx, (zval *)&(cmd)->zcommand, name TSRMLS_CC) : \

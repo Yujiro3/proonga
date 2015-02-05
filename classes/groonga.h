@@ -216,7 +216,7 @@ PHP_METHOD(Groonga, query)
     groonga_t *self;
     char *query = NULL, *res;
     uint length;
-    long flags = 0, recv_flags;
+    long flags = 0;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|bl", &query, &length, &zbool, &flags) == FAILURE) {
         RETURN_FALSE;
@@ -225,6 +225,7 @@ PHP_METHOD(Groonga, query)
 
     grn_ctx_send(self->ctx, query, length, flags);
     if (GRN_SUCCESS == self->ctx->rc) {
+        int recv_flags;
         grn_ctx_recv(self->ctx, &res, &length, &recv_flags);
     }
 
@@ -270,7 +271,7 @@ PHP_METHOD(Groonga, command)
     CALL_METHOD2(GCommand, __construct, NULL, zcommand, getThis(), &zcmdname);
 
     /* 返り値へオブジェクトを渡す */
-    RETURN_ZVAL(zcommand, 1, 0);
+    RETURN_ZVAL(zcommand, 1, 1);
 }
 
 /**
@@ -291,7 +292,7 @@ PHP_METHOD(Groonga, status)
     self = (groonga_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* コマンド取得 */
-    if (!PRN_COMMAND(self->ctx, &command, "status")) {
+    if (!prn_command(self->ctx, &command, "status")) {
         RETURN_FALSE;
     }
 
@@ -322,7 +323,7 @@ PHP_METHOD(Groonga, tableList)
     self = (groonga_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* コマンド取得 */
-    if (!PRN_COMMAND(self->ctx, &command, "table_list")) {
+    if (!prn_command(self->ctx, &command, "table_list")) {
         RETURN_FALSE;
     }
 
@@ -355,7 +356,7 @@ PHP_METHOD(Groonga, cacheLimit)
     }
     self = (groonga_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
-    if (!PRN_COMMAND(self->ctx, &command, "cache_limit")) {
+    if (!prn_command(self->ctx, &command, "cache_limit")) {
         RETURN_FALSE;
     }
 
@@ -400,7 +401,7 @@ PHP_METHOD(Groonga, dump)
     self = (groonga_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* コマンド取得 */
-    if (!PRN_COMMAND(self->ctx, &command, "dump")) {
+    if (!prn_command(self->ctx, &command, "dump")) {
         RETURN_FALSE;
     }
 
@@ -440,7 +441,7 @@ PHP_METHOD(Groonga, table)
     CALL_METHOD2(GTable, __construct, NULL, ztable, getThis(), &zname);
 
     /* 返り値へオブジェクトを渡す */
-    RETURN_ZVAL(ztable, 1, 0);
+    RETURN_ZVAL(ztable, 1, 1);
 }
 
 #   endif       /* #ifndef HAVE_PROONGA_CLASS_GROONGA */
