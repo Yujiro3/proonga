@@ -124,47 +124,6 @@ zend_object_value groonga_command_ctor(zend_class_entry *ce TSRMLS_DC)
 }
 
 /**
- * GDeleteクラスのデストラクタ (メモリ解放)
- *
- * @param groonga_delete_t *self オブジェクト
- * @return void
- */
-static void groonga_delete_dtor(groonga_delete_t *self TSRMLS_DC)
-{
-    /* オブジェクトの開放 */
-    zend_object_std_dtor(&self->std TSRMLS_CC);
-    efree(self);
-}
-
-/**
- * GDeleteクラスのコンストラクタ (メモリ確保)
- *
- * @param zend_class_entry *ce クラスエントリ
- * @return zend_object_value
- */
-zend_object_value groonga_delete_ctor(zend_class_entry *ce TSRMLS_DC)
-{
-    zend_object_value retval;
-    groonga_delete_t *self;
-
-    self = ecalloc(1, sizeof(*self));
-
-    zend_object_std_init(&self->std, ce TSRMLS_CC);
-    object_properties_init(&self->std, ce);
-    rebuild_object_properties(&self->std);
-
-    retval.handle = zend_objects_store_put(
-        self, 
-        (zend_objects_store_dtor_t)zend_objects_destroy_object, 
-        (zend_objects_free_object_storage_t)groonga_delete_dtor, 
-        NULL TSRMLS_CC
-    );
-    retval.handlers = zend_get_std_object_handlers();
-
-    return retval;
-}
-
-/**
  * GTableクラスのデストラクタ (メモリ解放)
  *
  * @param groonga_table_t *self オブジェクト
@@ -198,6 +157,47 @@ zend_object_value groonga_table_ctor(zend_class_entry *ce TSRMLS_DC)
         self, 
         (zend_objects_store_dtor_t)zend_objects_destroy_object, 
         (zend_objects_free_object_storage_t)groonga_table_dtor, 
+        NULL TSRMLS_CC
+    );
+    retval.handlers = zend_get_std_object_handlers();
+
+    return retval;
+}
+
+/**
+ * GDeleteクラスのデストラクタ (メモリ解放)
+ *
+ * @param groonga_delete_t *self オブジェクト
+ * @return void
+ */
+static void groonga_delete_dtor(groonga_delete_t *self TSRMLS_DC)
+{
+    /* オブジェクトの開放 */
+    zend_object_std_dtor(&self->std TSRMLS_CC);
+    efree(self);
+}
+
+/**
+ * GDeleteクラスのコンストラクタ (メモリ確保)
+ *
+ * @param zend_class_entry *ce クラスエントリ
+ * @return zend_object_value
+ */
+zend_object_value groonga_delete_ctor(zend_class_entry *ce TSRMLS_DC)
+{
+    zend_object_value retval;
+    groonga_delete_t *self;
+
+    self = ecalloc(1, sizeof(*self));
+
+    zend_object_std_init(&self->std, ce TSRMLS_CC);
+    object_properties_init(&self->std, ce);
+    rebuild_object_properties(&self->std);
+
+    retval.handle = zend_objects_store_put(
+        self, 
+        (zend_objects_store_dtor_t)zend_objects_destroy_object, 
+        (zend_objects_free_object_storage_t)groonga_delete_dtor, 
         NULL TSRMLS_CC
     );
     retval.handlers = zend_get_std_object_handlers();
@@ -327,7 +327,6 @@ zend_object_value groonga_select_ctor(zend_class_entry *ce TSRMLS_DC)
 
     return retval;
 }
-
 
 #endif      // #ifndef HAVE_PROONGA_OBJECT
 

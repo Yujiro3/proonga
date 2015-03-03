@@ -145,12 +145,12 @@ PHP_METHOD(GColumn, __construct)
         RETURN_FALSE;
     }
 
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "table", Z_STRVAL(self->table))) {
+    if (!prn_command_set(self->ctx, &self->command, "table", Z_STRVAL(self->table))) {
         zend_throw_exception(groonga_exception_ce, "Unable to initialize of column.", 0 TSRMLS_CC);
         RETURN_FALSE;
     }
 
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "name", Z_STRVAL(self->name))) {
+    if (!prn_command_set(self->ctx, &self->command, "name", Z_STRVAL(self->name))) {
         zend_throw_exception(groonga_exception_ce, "Unable to initialize of column.", 0 TSRMLS_CC);
         RETURN_FALSE;
     }
@@ -168,7 +168,7 @@ PHP_METHOD(GColumn, __destruct)
 
     self = (groonga_column_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
-    PRN_COMMAND_UNLINK(self->ctx, &self->command);
+    prn_command_unlink(self->ctx, &self->command);
 }
 
 /**
@@ -192,7 +192,7 @@ PHP_METHOD(GColumn, __set)
     self = (groonga_column_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, key, value)) {
+    if (!prn_command_set(self->ctx, &self->command, key, value)) {
         RETURN_FALSE;
     }
     
@@ -210,6 +210,7 @@ PHP_METHOD(GColumn, __set)
 PHP_METHOD(GColumn, __get)
 {
     groonga_column_t *self;
+    zval *retval;
     char *key;
     uint key_len;
 
@@ -220,7 +221,7 @@ PHP_METHOD(GColumn, __get)
     self = (groonga_column_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_GET(self->ctx, &self->command, key, return_value)) {
+    if (!prn_command_get(self->ctx, &self->command, key, (zval **)&retval)) {
         RETURN_FALSE;
     }
     
@@ -247,7 +248,7 @@ PHP_METHOD(GColumn, flags)
     self = (groonga_column_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "flags", value)) {
+    if (!prn_command_set(self->ctx, &self->command, "flags", value)) {
         RETURN_FALSE;
     }
 
@@ -274,7 +275,7 @@ PHP_METHOD(GColumn, type)
     self = (groonga_column_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "type", value)) {
+    if (!prn_command_set(self->ctx, &self->command, "type", value)) {
         RETURN_FALSE;
     }
 
@@ -301,7 +302,7 @@ PHP_METHOD(GColumn, source)
     self = (groonga_column_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "source", value)) {
+    if (!prn_command_set(self->ctx, &self->command, "source", value)) {
         RETURN_FALSE;
     }
 
@@ -318,7 +319,8 @@ PHP_METHOD(GColumn, source)
 PHP_METHOD(GColumn, create)
 {
     groonga_column_t *self;
-    zval retval;
+    int result;
+    zval *retval;
 
     /* 引数の受け取り */
     if (zend_parse_parameters_none() != SUCCESS) {
@@ -327,12 +329,14 @@ PHP_METHOD(GColumn, create)
     self = (groonga_column_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* コマンドの実行 */
-    if (!PRN_COMMAND_EXEC(self->ctx, &self->command, &retval, 0)) {
+    if (!prn_command_exec(self->ctx, &self->command, 0, (zval **)&retval)) {
         RETURN_FALSE;
     }
 
     /* 結果の判定 */
-    if (!strcmp("true", Z_STRVAL(retval))) {
+    result = (strncasecmp(Z_STRVAL_P(retval), "true", 4) == 0);
+    zval_ptr_dtor(&retval);
+    if (!result) {
         RETURN_FALSE;    
     }
 
@@ -349,7 +353,8 @@ PHP_METHOD(GColumn, remove)
 {
     groonga_column_t *self;
     prn_cmd command;
-    zval retval;
+    zval *retval;
+    int result;
 
     /* 引数の受け取り */
     if (zend_parse_parameters_none() != SUCCESS) {
@@ -363,25 +368,27 @@ PHP_METHOD(GColumn, remove)
     }
 
     /* テーブル名を設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &command, "table", Z_STRVAL(self->table))) {
+    if (!prn_command_set(self->ctx, &command, "table", Z_STRVAL(self->table))) {
         RETURN_FALSE;
     }
 
     /* カラム名を設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &command, "name", Z_STRVAL(self->name))) {
+    if (!prn_command_set(self->ctx, &command, "name", Z_STRVAL(self->name))) {
         RETURN_FALSE;
     }
 
     /* コマンドの実行 */
-    if (!PRN_COMMAND_EXEC(self->ctx, &command, &retval, 0)) {
+    if (!prn_command_exec(self->ctx, &command, 0, (zval **)&retval)) {
         RETURN_FALSE;
     }
 
     /* メモリ解放 */
-    PRN_COMMAND_UNLINK(self->ctx, &command);
+    prn_command_unlink(self->ctx, &command);
 
     /* 結果の判定 */
-    if (!strcmp("true", Z_STRVAL(retval))) {
+    result = (strncasecmp(Z_STRVAL_P(retval), "true", 4) == 0);
+    zval_ptr_dtor(&retval);
+    if (!result) {
         RETURN_FALSE;    
     }
 
@@ -398,7 +405,8 @@ PHP_METHOD(GColumn, rename)
 {
     groonga_column_t *self;
     prn_cmd command;
-    zval retval;
+    zval *retval;
+    int result;
     char *name;
     uint name_len;
 
@@ -414,30 +422,32 @@ PHP_METHOD(GColumn, rename)
     }
 
     /* テーブル名を設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &command, "table", Z_STRVAL(self->table))) {
+    if (!prn_command_set(self->ctx, &command, "table", Z_STRVAL(self->table))) {
         RETURN_FALSE;
     }
 
     /* カラム名を設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &command, "name", Z_STRVAL(self->name))) {
+    if (!prn_command_set(self->ctx, &command, "name", Z_STRVAL(self->name))) {
         RETURN_FALSE;
     }
 
     /* 新しいテーブル名を設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &command, "new_name", name)) {
+    if (!prn_command_set(self->ctx, &command, "new_name", name)) {
         RETURN_FALSE;
     }
 
     /* コマンドの実行 */
-    if (!PRN_COMMAND_EXEC(self->ctx, &command, &retval, 0)) {
+    if (!prn_command_exec(self->ctx, &command, 0, (zval **)&retval)) {
         RETURN_FALSE;
     }
 
     /* メモリ解放 */
-    PRN_COMMAND_UNLINK(self->ctx, &command);
+    prn_command_unlink(self->ctx, &command);
 
     /* 結果の判定 */
-    if (!strcmp("true", Z_STRVAL(retval))) {
+    result = (strncasecmp(Z_STRVAL_P(retval), "true", 4) == 0);
+    zval_ptr_dtor(&retval);
+    if (!result) {
         RETURN_FALSE;    
     }
 

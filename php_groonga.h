@@ -68,15 +68,15 @@ PHP_RINIT_FUNCTION(groonga);
 PHP_RSHUTDOWN_FUNCTION(groonga);
 PHP_MINFO_FUNCTION(groonga);
 
-/* 
-    Declare any global variables you may need between the BEGIN
-    and END macros here:     
-
+/**
+ * グローバル変数用構造体
+ */
 ZEND_BEGIN_MODULE_GLOBALS(groonga)
-    long  global_value;
-    char *global_string;
+    char *dbpath;           // DB作成パス
+
+    int initialized;        // Groonga初期化フラグ
+    int gqtpConnected;      // GQTP接続フラグ
 ZEND_END_MODULE_GLOBALS(groonga)
-*/
 
 /**
  * 自身のオブジェクトを返すマクロ
@@ -114,14 +114,17 @@ ZEND_END_MODULE_GLOBALS(groonga)
     CALL_METHOD_BASE(classname, name)(0, retval, NULL, thisptr, 0 TSRMLS_CC);
 
 #define CALL_METHOD1(classname, name, retval, thisptr, param1) \
+    ZEND_VM_STACK_GROW_IF_NEEDED(2); \
     CALL_METHOD_HELPER(classname, name, retval, thisptr, 1, param1);
 
 #define CALL_METHOD2(classname, name, retval, thisptr, param1, param2) \
+    ZEND_VM_STACK_GROW_IF_NEEDED(3); \
     PUSH_PARAM(param1); \
     CALL_METHOD_HELPER(classname, name, retval, thisptr, 2, param2); \
     POP_PARAM();
 
 #define CALL_METHOD3(classname, name, retval, thisptr, param1, param2, param3) \
+    ZEND_VM_STACK_GROW_IF_NEEDED(4); \
     PUSH_PARAM(param1); PUSH_PARAM(param2); \
     CALL_METHOD_HELPER(classname, name, retval, thisptr, 3, param3); \
     POP_PARAM(); POP_PARAM();
@@ -141,12 +144,12 @@ ZEND_END_MODULE_GLOBALS(groonga)
 #   include "classes/command.h"
 #endif
 
-#ifndef HAVE_PROONGA_CLASS_DELETE_H
-#   include "classes/delete.h"
-#endif
-
 #ifndef HAVE_PROONGA_CLASS_TABLE_H
 #   include "classes/table.h"
+#endif
+
+#ifndef HAVE_PROONGA_CLASS_DELETE_H
+#   include "classes/delete.h"
 #endif
 
 #ifndef HAVE_PROONGA_CLASS_LOAD_H

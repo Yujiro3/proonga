@@ -136,7 +136,7 @@ PHP_METHOD(GLoad, __construct)
         RETURN_FALSE;
     }
 
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "table", Z_STRVAL(grn_p->name))) {
+    if (!prn_command_set(self->ctx, &self->command, "table", Z_STRVAL(grn_p->name))) {
         zend_throw_exception(groonga_exception_ce, "Unable to initialize of load.", 0 TSRMLS_CC);
         RETURN_FALSE;
     }
@@ -154,7 +154,7 @@ PHP_METHOD(GLoad, __destruct)
 
     self = (groonga_load_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
-    PRN_COMMAND_UNLINK(self->ctx, &self->command);
+    prn_command_unlink(self->ctx, &self->command);
 }
 
 /**
@@ -178,7 +178,7 @@ PHP_METHOD(GLoad, __set)
     self = (groonga_load_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, key, value)) {
+    if (!prn_command_set(self->ctx, &self->command, key, value)) {
         RETURN_FALSE;
     }
     
@@ -196,6 +196,7 @@ PHP_METHOD(GLoad, __set)
 PHP_METHOD(GLoad, __get)
 {
     groonga_load_t *self;
+    zval *retval;
     char *key;
     uint key_len;
 
@@ -206,11 +207,11 @@ PHP_METHOD(GLoad, __get)
     self = (groonga_load_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_GET(self->ctx, &self->command, key, return_value)) {
+    if (!prn_command_get(self->ctx, &self->command, key, (zval **)&retval)) {
         RETURN_FALSE;
     }
     
-    return;
+    RETURN_ZVAL(retval, 1, 1);
 }
 
 /**
@@ -236,7 +237,7 @@ PHP_METHOD(GLoad, values)
         php_json_encode(&buf, zvalues, 0 TSRMLS_CC);
 
         /* 変数の設定 */
-        if (!PRN_COMMAND_SET(self->ctx, &self->command, "values", buf.c)) {
+        if (!prn_command_set(self->ctx, &self->command, "values", buf.c)) {
             RETURN_FALSE;
         }
         if (buf.c) {
@@ -244,7 +245,7 @@ PHP_METHOD(GLoad, values)
         }
     } else if (IS_STRING == Z_TYPE_P(zvalues)) {
         /* 変数の設定 */
-        if (!PRN_COMMAND_SET(self->ctx, &self->command, "values", Z_STRVAL_P(zvalues))) {
+        if (!prn_command_set(self->ctx, &self->command, "values", Z_STRVAL_P(zvalues))) {
             RETURN_FALSE;
         }
     }
@@ -272,7 +273,7 @@ PHP_METHOD(GLoad, table)
     self = (groonga_load_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "table", value)) {
+    if (!prn_command_set(self->ctx, &self->command, "table", value)) {
         RETURN_FALSE;
     }
 
@@ -299,7 +300,7 @@ PHP_METHOD(GLoad, columns)
     self = (groonga_load_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "columns", value)) {
+    if (!prn_command_set(self->ctx, &self->command, "columns", value)) {
         RETURN_FALSE;
     }
 
@@ -326,7 +327,7 @@ PHP_METHOD(GLoad, ifexists)
     self = (groonga_load_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "ifexists", value)) {
+    if (!prn_command_set(self->ctx, &self->command, "ifexists", value)) {
         RETURN_FALSE;
     }
 
@@ -353,7 +354,7 @@ PHP_METHOD(GLoad, inputType)
     self = (groonga_load_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "input_type", value)) {
+    if (!prn_command_set(self->ctx, &self->command, "input_type", value)) {
         RETURN_FALSE;
     }
 
@@ -380,7 +381,7 @@ PHP_METHOD(GLoad, each)
     self = (groonga_load_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "each", value)) {
+    if (!prn_command_set(self->ctx, &self->command, "each", value)) {
         RETURN_FALSE;
     }
 
@@ -398,7 +399,8 @@ PHP_METHOD(GLoad, exec)
 {
     groonga_load_t *self;
     grn_ctx_info info;
-    zval retval;
+    zval *retval;
+    int result;
 
     if (zend_parse_parameters_none() != SUCCESS) {
         RETURN_FALSE;
@@ -406,12 +408,14 @@ PHP_METHOD(GLoad, exec)
     self = (groonga_load_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* コマンドの実行 */
-    if (!PRN_COMMAND_EXEC(self->ctx, &self->command, &retval, 0)) {
+    if (!prn_command_exec(self->ctx, &self->command, 0, (zval **)&retval)) {
         RETURN_FALSE;
     }
 
     /* 結果の判定 */
-    if (!strcmp("true", Z_STRVAL(retval))) {
+    result = (strncasecmp(Z_STRVAL_P(retval), "true", 4) == 0);
+    zval_ptr_dtor(&retval);
+    if (!result) {
         RETURN_FALSE;    
     }
 

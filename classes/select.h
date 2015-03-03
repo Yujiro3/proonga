@@ -167,7 +167,7 @@ PHP_METHOD(GSelect, __construct)
     }
 
     /* テーブル名を設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "table", Z_STRVAL(grn_p->name))) {
+    if (!prn_command_set(self->ctx, &self->command, "table", Z_STRVAL(grn_p->name))) {
         zend_throw_exception(groonga_exception_ce, "Unable to initialize of select.", 0 TSRMLS_CC);
         RETURN_FALSE;
     }
@@ -185,7 +185,7 @@ PHP_METHOD(GSelect, __destruct)
 
     self = (groonga_select_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
-    PRN_COMMAND_UNLINK(self->ctx, &self->command);
+    prn_command_unlink(self->ctx, &self->command);
 }
 
 
@@ -210,7 +210,7 @@ PHP_METHOD(GSelect, __set)
     self = (groonga_select_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, key, value)) {
+    if (!prn_command_set(self->ctx, &self->command, key, value)) {
         RETURN_FALSE;
     }
     
@@ -228,6 +228,7 @@ PHP_METHOD(GSelect, __set)
 PHP_METHOD(GSelect, __get)
 {
     groonga_select_t *self;
+    zval *retval;
     char *key;
     uint key_len;
 
@@ -238,11 +239,11 @@ PHP_METHOD(GSelect, __get)
     self = (groonga_select_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_GET(self->ctx, &self->command, key, return_value)) {
+    if (!prn_command_get(self->ctx, &self->command, key, (zval **)&retval)) {
         RETURN_FALSE;
     }
     
-    return;
+    RETURN_ZVAL(retval, 1, 1);
 }
 
 /**
@@ -265,7 +266,7 @@ PHP_METHOD(GSelect, matchColumns)
     self = (groonga_select_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "match_columns", value)) {
+    if (!prn_command_set(self->ctx, &self->command, "match_columns", value)) {
         RETURN_FALSE;
     }
 
@@ -292,7 +293,7 @@ PHP_METHOD(GSelect, query)
     self = (groonga_select_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "query", value)) {
+    if (!prn_command_set(self->ctx, &self->command, "query", value)) {
         RETURN_FALSE;
     }
 
@@ -319,7 +320,7 @@ PHP_METHOD(GSelect, filter)
     self = (groonga_select_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "filter", value)) {
+    if (!prn_command_set(self->ctx, &self->command, "filter", value)) {
         RETURN_FALSE;
     }
 
@@ -346,7 +347,7 @@ PHP_METHOD(GSelect, scorer)
     self = (groonga_select_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "scorer", value)) {
+    if (!prn_command_set(self->ctx, &self->command, "scorer", value)) {
         RETURN_FALSE;
     }
 
@@ -373,7 +374,7 @@ PHP_METHOD(GSelect, sortby)
     self = (groonga_select_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "sortby", value)) {
+    if (!prn_command_set(self->ctx, &self->command, "sortby", value)) {
         RETURN_FALSE;
     }
 
@@ -400,7 +401,7 @@ PHP_METHOD(GSelect, outputColumns)
     self = (groonga_select_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "output_columns", value)) {
+    if (!prn_command_set(self->ctx, &self->command, "output_columns", value)) {
         RETURN_FALSE;
     }
 
@@ -427,7 +428,7 @@ PHP_METHOD(GSelect, offset)
     self = (groonga_select_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "offset", value)) {
+    if (!prn_command_set(self->ctx, &self->command, "offset", value)) {
         RETURN_FALSE;
     }
 
@@ -454,7 +455,7 @@ PHP_METHOD(GSelect, limit)
     self = (groonga_select_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "limit", value)) {
+    if (!prn_command_set(self->ctx, &self->command, "limit", value)) {
         RETURN_FALSE;
     }
 
@@ -481,7 +482,7 @@ PHP_METHOD(GSelect, drilldown)
     self = (groonga_select_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "drilldown", value)) {
+    if (!prn_command_set(self->ctx, &self->command, "drilldown", value)) {
         RETURN_FALSE;
     }
 
@@ -508,7 +509,7 @@ PHP_METHOD(GSelect, drilldownSortby)
     self = (groonga_select_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "drilldown_sortby", value)) {
+    if (!prn_command_set(self->ctx, &self->command, "drilldown_sortby", value)) {
         RETURN_FALSE;
     }
 
@@ -535,7 +536,7 @@ PHP_METHOD(GSelect, drilldownOutputColumns)
     self = (groonga_select_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "drilldown_output_columns", value)) {
+    if (!prn_command_set(self->ctx, &self->command, "drilldown_output_columns", value)) {
         RETURN_FALSE;
     }
 
@@ -562,7 +563,7 @@ PHP_METHOD(GSelect, drilldownOffset)
     self = (groonga_select_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "drilldown_offset", value)) {
+    if (!prn_command_set(self->ctx, &self->command, "drilldown_offset", value)) {
         RETURN_FALSE;
     }
 
@@ -589,7 +590,7 @@ PHP_METHOD(GSelect, drilldownLimit)
     self = (groonga_select_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "drilldown_limit", value)) {
+    if (!prn_command_set(self->ctx, &self->command, "drilldown_limit", value)) {
         RETURN_FALSE;
     }
 
@@ -616,7 +617,7 @@ PHP_METHOD(GSelect, cache)
     self = (groonga_select_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "cache", value)) {
+    if (!prn_command_set(self->ctx, &self->command, "cache", value)) {
         RETURN_FALSE;
     }
 
@@ -643,7 +644,7 @@ PHP_METHOD(GSelect, matchEscalationThreshold)
     self = (groonga_select_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "match_escalation_threshold", value)) {
+    if (!prn_command_set(self->ctx, &self->command, "match_escalation_threshold", value)) {
         RETURN_FALSE;
     }
 
@@ -670,7 +671,7 @@ PHP_METHOD(GSelect, queryExpansion)
     self = (groonga_select_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "query_expansion", value)) {
+    if (!prn_command_set(self->ctx, &self->command, "query_expansion", value)) {
         RETURN_FALSE;
     }
 
@@ -697,7 +698,7 @@ PHP_METHOD(GSelect, queryFlags)
     self = (groonga_select_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "query_flags", value)) {
+    if (!prn_command_set(self->ctx, &self->command, "query_flags", value)) {
         RETURN_FALSE;
     }
 
@@ -724,7 +725,7 @@ PHP_METHOD(GSelect, queryExpander)
     self = (groonga_select_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "query_expander", value)) {
+    if (!prn_command_set(self->ctx, &self->command, "query_expander", value)) {
         RETURN_FALSE;
     }
 
@@ -751,7 +752,7 @@ PHP_METHOD(GSelect, adjuster)
     self = (groonga_select_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "adjuster", value)) {
+    if (!prn_command_set(self->ctx, &self->command, "adjuster", value)) {
         RETURN_FALSE;
     }
 
@@ -768,9 +769,8 @@ PHP_METHOD(GSelect, adjuster)
 PHP_METHOD(GSelect, exec)
 {
     groonga_select_t *self;
-    grn_ctx_info info;
     zend_bool assoc = 0;
-    zval retval;
+    zval *retval;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|b", &assoc) == FAILURE) {
         RETURN_FALSE;
@@ -778,9 +778,10 @@ PHP_METHOD(GSelect, exec)
     self = (groonga_select_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* コマンドの実行 */
-    if (!PRN_COMMAND_EXEC(self->ctx, &self->command, return_value, (int)assoc)) {
+    if (!prn_command_exec(self->ctx, &self->command, (int)assoc, (zval **)&retval)) {
         RETURN_FALSE;
     }
+    RETURN_ZVAL(retval, 1, 1);
 }
 
 #   endif       /* #ifndef HAVE_PROONGA_CLASS_SELECT */

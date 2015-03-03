@@ -174,7 +174,7 @@ PHP_METHOD(GTable, __construct)
     }
 
     /* 変数へ文字列を設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "name", Z_STRVAL(self->name))) {
+    if (!prn_command_set(self->ctx, &self->command, "name", Z_STRVAL(self->name))) {
         zend_throw_exception(groonga_exception_ce, "Unable to initialize of table.", 0 TSRMLS_CC);
         RETURN_FALSE;
     }
@@ -192,7 +192,7 @@ PHP_METHOD(GTable, __destruct)
 
     self = (groonga_table_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
-    PRN_COMMAND_UNLINK(self->ctx, &self->command);
+    prn_command_unlink(self->ctx, &self->command);
 }
 
 /**
@@ -216,7 +216,7 @@ PHP_METHOD(GTable, __set)
     self = (groonga_table_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, key, value)) {
+    if (!prn_command_set(self->ctx, &self->command, key, value)) {
         RETURN_FALSE;
     }
     
@@ -234,6 +234,7 @@ PHP_METHOD(GTable, __set)
 PHP_METHOD(GTable, __get)
 {
     groonga_table_t *self;
+    zval *retval;
     char *key;
     uint key_len;
 
@@ -244,11 +245,11 @@ PHP_METHOD(GTable, __get)
     self = (groonga_table_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_GET(self->ctx, &self->command, key, return_value)) {
+    if (!prn_command_get(self->ctx, &self->command, key, (zval **)&retval)) {
         RETURN_FALSE;
     }
-    
-    return;
+
+    RETURN_ZVAL(retval, 1, 1);
 }
 
 /**
@@ -271,7 +272,7 @@ PHP_METHOD(GTable, name)
     self = (groonga_table_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "name", value)) {
+    if (!prn_command_set(self->ctx, &self->command, "name", value)) {
         RETURN_FALSE;
     }
     
@@ -298,7 +299,7 @@ PHP_METHOD(GTable, flags)
     self = (groonga_table_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "flags", value)) {
+    if (!prn_command_set(self->ctx, &self->command, "flags", value)) {
         RETURN_FALSE;
     }
     
@@ -325,7 +326,7 @@ PHP_METHOD(GTable, keyType)
     self = (groonga_table_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "key_type", value)) {
+    if (!prn_command_set(self->ctx, &self->command, "key_type", value)) {
         RETURN_FALSE;
     }
     
@@ -352,7 +353,7 @@ PHP_METHOD(GTable, valueType)
     self = (groonga_table_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "value_type", value)) {
+    if (!prn_command_set(self->ctx, &self->command, "value_type", value)) {
         RETURN_FALSE;
     }
     
@@ -379,7 +380,7 @@ PHP_METHOD(GTable, defaultTokenizer)
     self = (groonga_table_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "default_tokenizer", value)) {
+    if (!prn_command_set(self->ctx, &self->command, "default_tokenizer", value)) {
         RETURN_FALSE;
     }
     
@@ -406,7 +407,7 @@ PHP_METHOD(GTable, normalizer)
     self = (groonga_table_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "normalizer", value)) {
+    if (!prn_command_set(self->ctx, &self->command, "normalizer", value)) {
         RETURN_FALSE;
     }
     
@@ -433,7 +434,7 @@ PHP_METHOD(GTable, tokenFilters)
     self = (groonga_table_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "token_filters", value)) {
+    if (!prn_command_set(self->ctx, &self->command, "token_filters", value)) {
         RETURN_FALSE;
     }
     
@@ -569,7 +570,8 @@ PHP_METHOD(GTable, select)
 PHP_METHOD(GTable, create)
 {
     groonga_table_t *self;
-    zval retval;
+    zval *retval;
+    int result;
 
     /* 引数の受け取り */
     if (zend_parse_parameters_none() != SUCCESS) {
@@ -577,12 +579,14 @@ PHP_METHOD(GTable, create)
     }
     self = (groonga_table_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
     /* コマンドの実行 */
-    if (!PRN_COMMAND_EXEC(self->ctx, &self->command, &retval, 0)) {
+    if (!prn_command_exec(self->ctx, &self->command, 0, (zval **)&retval)) {
         RETURN_FALSE;
-    }    
+    }
 
     /* 結果の判定 */
-    if (!strcmp("true", Z_STRVAL(retval))) {
+    result = (strncasecmp(Z_STRVAL_P(retval), "true", 4) == 0);
+    zval_ptr_dtor(&retval);
+    if (!result) {
         RETURN_FALSE;    
     }
 
@@ -600,7 +604,8 @@ PHP_METHOD(GTable, remove)
 {
     groonga_table_t *self;
     prn_cmd command;
-    zval retval;
+    zval *retval;
+    int result;
 
     /* 引数の受け取り */
     if (zend_parse_parameters_none() != SUCCESS) {
@@ -614,20 +619,22 @@ PHP_METHOD(GTable, remove)
     }
 
     /* テーブル名を設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &command, "name", Z_STRVAL(self->name))) {
+    if (!prn_command_set(self->ctx, &command, "name", Z_STRVAL(self->name))) {
         RETURN_FALSE;
     }
 
     /* コマンドの実行 */
-    if (!PRN_COMMAND_EXEC(self->ctx, &command, &retval, 0)) {
+    if (!prn_command_exec(self->ctx, &command, 0, (zval **)&retval)) {
         RETURN_FALSE;
     }
 
     /* メモリ解放 */
-    PRN_COMMAND_UNLINK(self->ctx, &command);
+    prn_command_unlink(self->ctx, &command);
 
     /* 結果の判定 */
-    if (!strcmp("true", Z_STRVAL(retval))) {
+    result = (strncasecmp(Z_STRVAL_P(retval), "true", 4) == 0);
+    zval_ptr_dtor(&retval);
+    if (!result) {
         RETURN_FALSE;    
     }
 
@@ -645,7 +652,8 @@ PHP_METHOD(GTable, rename)
 {
     groonga_table_t *self;
     prn_cmd command;
-    zval retval;
+    zval *retval;
+    int result;
     char *name;
     uint name_len;
 
@@ -661,25 +669,27 @@ PHP_METHOD(GTable, rename)
     }
 
     /* テーブル名を設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &command, "name", Z_STRVAL(self->name))) {
+    if (!prn_command_set(self->ctx, &command, "name", Z_STRVAL(self->name))) {
         RETURN_FALSE;
     }
 
     /* 新しいテーブル名を設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &command, "new_name", name)) {
+    if (!prn_command_set(self->ctx, &command, "new_name", name)) {
         RETURN_FALSE;
     }
 
     /* コマンドの実行 */
-    if (!PRN_COMMAND_EXEC(self->ctx, &command, &retval, 0)) {
+    if (!prn_command_exec(self->ctx, &command, 0, (zval **)&retval)) {
         RETURN_FALSE;
     }
 
     /* メモリ解放 */
-    PRN_COMMAND_UNLINK(self->ctx, &command);
+    prn_command_unlink(self->ctx, &command);
 
     /* 結果の判定 */
-    if (!strcmp("true", Z_STRVAL(retval))) {
+    result = (strncasecmp(Z_STRVAL_P(retval), "true", 4) == 0);
+    zval_ptr_dtor(&retval);
+    if (!result) {
         RETURN_FALSE;    
     }
 
@@ -700,6 +710,7 @@ PHP_METHOD(GTable, dump)
 {
     groonga_table_t *self;
     prn_cmd command;
+    zval *retval;
 
     /* 引数の受け取り */
     if (zend_parse_parameters_none() != SUCCESS) {
@@ -713,19 +724,19 @@ PHP_METHOD(GTable, dump)
     }
 
     /* 変数へ文字列を設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &command, "tables", Z_STRVAL(self->name))) {
+    if (!prn_command_set(self->ctx, &command, "tables", Z_STRVAL(self->name))) {
         RETURN_FALSE;
     }
 
     /* コマンドの実行 */
-    if (!PRN_COMMAND_EXEC(self->ctx, &command, return_value, 0)) {
+    if (!prn_command_exec(self->ctx, &command, 0, (zval **)&retval)) {
         RETURN_FALSE;
     }
 
     /* メモリ解放 */
-    PRN_COMMAND_UNLINK(self->ctx, &command);
+    prn_command_unlink(self->ctx, &command);
 
-    return ;
+    RETURN_ZVAL(retval, 1, 1);
 }
 
 /**
@@ -739,6 +750,8 @@ PHP_METHOD(GTable, truncate)
 {
     groonga_table_t *self;
     prn_cmd command;
+    zval *retval;
+    int result;
 
     /* 引数の受け取り */
     if (zend_parse_parameters_none() != SUCCESS) {
@@ -752,17 +765,24 @@ PHP_METHOD(GTable, truncate)
     }
 
     /* 変数へ文字列を設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &command, "table", Z_STRVAL(self->name))) {
+    if (!prn_command_set(self->ctx, &command, "table", Z_STRVAL(self->name))) {
         RETURN_FALSE;
     }
 
     /* コマンドの実行 */
-    if (!PRN_COMMAND_EXEC(self->ctx, &command, return_value, 0)) {
+    if (!prn_command_exec(self->ctx, &command, 0, (zval **)&retval)) {
         RETURN_FALSE;
     }
 
     /* メモリ解放 */
-    PRN_COMMAND_UNLINK(self->ctx, &command);
+    prn_command_unlink(self->ctx, &command);
+
+    /* 結果の判定 */
+    result = (strncasecmp(Z_STRVAL_P(retval), "true", 4) == 0);
+    zval_ptr_dtor(&retval);
+    if (!result) {
+        RETURN_FALSE;    
+    }
 
     RETURN_CHAIN();
 }
@@ -778,6 +798,7 @@ PHP_METHOD(GTable, columnList)
 {
     groonga_table_t *self;
     prn_cmd command;
+    zval *retval;
 
     /* 引数の受け取り */
     if (zend_parse_parameters_none() != SUCCESS) {
@@ -791,19 +812,19 @@ PHP_METHOD(GTable, columnList)
     }
 
     /* 変数へ文字列を設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &command, "table", Z_STRVAL(self->name))) {
+    if (!prn_command_set(self->ctx, &command, "table", Z_STRVAL(self->name))) {
         RETURN_FALSE;
     }
 
     /* コマンドの実行 */
-    if (!PRN_COMMAND_EXEC(self->ctx, &command, return_value, 0)) {
+    if (!prn_command_exec(self->ctx, &command, 1, (zval **)&retval)) {
         RETURN_FALSE;
     }
 
     /* メモリ解放 */
-    PRN_COMMAND_UNLINK(self->ctx, &command);
+    prn_command_unlink(self->ctx, &command);
 
-    return ;
+    RETURN_ZVAL(retval, 1, 1);
 }
 
 #   endif       /* #ifndef HAVE_PROONGA_CLASS_TABLE */

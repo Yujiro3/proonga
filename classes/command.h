@@ -139,7 +139,7 @@ PHP_METHOD(GCommand, __destruct)
 
     self = (groonga_command_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
-    PRN_COMMAND_UNLINK(self->ctx, &self->command);
+    prn_command_unlink(self->ctx, &self->command);
 }
 
 /**
@@ -162,7 +162,7 @@ PHP_METHOD(GCommand, __set)
     }
     self = (groonga_command_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, key, value)) {
+    if (!prn_command_set(self->ctx, &self->command, key, value)) {
         RETURN_FALSE;
     }
 
@@ -179,6 +179,7 @@ PHP_METHOD(GCommand, __set)
 PHP_METHOD(GCommand, __get)
 {
     groonga_command_t *self;
+    zval *retval;
     char *key;
     uint key_len;
 
@@ -188,11 +189,11 @@ PHP_METHOD(GCommand, __get)
     }
     self = (groonga_command_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
-    if (!PRN_COMMAND_GET(self->ctx, &self->command, key, return_value)) {
+    if (!prn_command_get(self->ctx, &self->command, key, (zval **)&retval)) {
         RETURN_FALSE;
     }
 
-    return;
+    RETURN_ZVAL(retval, 1, 1);
 }
 
 /**
@@ -207,7 +208,7 @@ PHP_METHOD(GCommand, exec)
     groonga_command_t *self;
     grn_ctx_info info;
     zend_bool assoc = 0;
-    zval retval;
+    zval *retval;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|b", &assoc) == FAILURE) {
         RETURN_FALSE;
@@ -215,11 +216,11 @@ PHP_METHOD(GCommand, exec)
     self = (groonga_command_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* コマンドの実行 */
-    if (!PRN_COMMAND_EXEC(self->ctx, &self->command, return_value, 1)) {
+    if (!prn_command_exec(self->ctx, &self->command, 1, (zval **)&retval)) {
         RETURN_FALSE;
     }
 
-    return;
+    RETURN_ZVAL(retval, 1, 1);
 }
 
 #   endif       /* #ifndef HAVE_PROONGA_CLASS_COMMAND */

@@ -65,6 +65,8 @@ echo '/_/_/_/_ dump _/_/_/_/'."\n";
 $result = $gdb->dump();
 print_r($result);
 echo "\n-----------\n";
+$result = $gdb->query('/d/dump.json');
+print_r($result);
 
 
 echo '/_/_/_/_ table _/_/_/_/'."\n";

@@ -56,15 +56,11 @@
 #   include "src/command.h"
 #endif
 
-/* If you declare any globals in php_groonga.h uncomment this:
+/* グローバル変数宣言 */
 ZEND_DECLARE_MODULE_GLOBALS(groonga)
-*/
 
 /* True global resources - no need for thread safety here */
 static int le_groonga;
-
-/* Groonga初期化フラグ */
-static int groonga_initialized = 0;
 
 /* クラス構造体 */
 zend_class_entry *groonga_database_ce = NULL;
@@ -98,25 +94,25 @@ zend_module_entry groonga_module_entry = {
     ZEND_GET_MODULE(groonga)
 #endif
 
-/* {{{ PHP_INI
+/**
+ * 実行時設定
+ *
  */
-/* Remove comments and fill if you need to have entries in php.ini
 PHP_INI_BEGIN()
-    STD_PHP_INI_ENTRY("groonga.global_value",      "42", PHP_INI_ALL, OnUpdateLong, global_value, zend_groonga_globals, groonga_globals)
-    STD_PHP_INI_ENTRY("groonga.global_string", "foobar", PHP_INI_ALL, OnUpdateString, global_string, zend_groonga_globals, groonga_globals)
+    STD_PHP_INI_ENTRY("groonga.dbpath", "/tmp", PHP_INI_ALL, OnUpdateString, dbpath, zend_groonga_globals, groonga_globals)
 PHP_INI_END()
-*/
-/* }}} */
 
-/* {{{ php_groonga_init_globals
+/**
+ * グローバル変数の初期化処理
+ *
+ * @param module
+ * @return int
  */
-/* Uncomment this function if you have INI entries
 static void php_groonga_init_globals(zend_groonga_globals *groonga_globals)
 {
-    groonga_globals->global_value = 0;
-    groonga_globals->global_string = NULL;
+    groonga_globals->initialized = 0;
+    groonga_globals->gqtpConnected = 0;
 }
-/* }}} */
 
 /**
  * モジュールメイン初期化処理
@@ -128,12 +124,15 @@ PHP_MINIT_FUNCTION(groonga)
 {
     zend_class_entry ce;
 
+    REGISTER_INI_ENTRIES();
+    ZEND_INIT_MODULE_GLOBALS(groonga, php_groonga_init_globals, NULL);
+
     /* groongaライブラリを初期化 */
-    if (0 == groonga_initialized) {
+    if (0 == GROONGA_G(initialized)) {
         if (GRN_SUCCESS != grn_init()) {
             return FAILURE;
         }
-        groonga_initialized = 1;
+        GROONGA_G(initialized) = 1;
     }
 
     /* Groonga(db)クラスの登録 */
@@ -146,15 +145,15 @@ PHP_MINIT_FUNCTION(groonga)
     groonga_command_ce = zend_register_internal_class(&ce TSRMLS_CC);
     groonga_command_ce->create_object = groonga_command_ctor;
 
-    /* GDeleteクラスの登録 */
-    INIT_CLASS_ENTRY(ce, "GDelete", groonga_delete_class_methods);
-    groonga_delete_ce = zend_register_internal_class(&ce TSRMLS_CC);
-    groonga_delete_ce->create_object = groonga_delete_ctor;
-
     /* GTableクラスの登録 */
     INIT_CLASS_ENTRY(ce, "GTable", groonga_table_class_methods);
     groonga_table_ce = zend_register_internal_class(&ce TSRMLS_CC);
     groonga_table_ce->create_object = groonga_table_ctor;
+
+    /* GDeleteクラスの登録 */
+    INIT_CLASS_ENTRY(ce, "GDelete", groonga_delete_class_methods);
+    groonga_delete_ce = zend_register_internal_class(&ce TSRMLS_CC);
+    groonga_delete_ce->create_object = groonga_delete_ctor;
 
     /* GLoadクラスの登録 */
     INIT_CLASS_ENTRY(ce, "GLoad", groonga_load_class_methods);
@@ -188,10 +187,12 @@ PHP_MINIT_FUNCTION(groonga)
  */
 PHP_MSHUTDOWN_FUNCTION(groonga)
 {
-    if (1 == groonga_initialized) {
+    if (1 == GROONGA_G(initialized)) {
         grn_fin();
-        groonga_initialized = 0;
+        GROONGA_G(initialized) = 0;
     }
+    UNREGISTER_INI_ENTRIES();
+
     return SUCCESS;
 }
 
@@ -239,12 +240,12 @@ PHP_MINFO_FUNCTION(groonga)
 #   include "classes/command.h"
 #endif
 
-#ifndef HAVE_PROONGA_CLASS_DELETE
-#   include "classes/delete.h"
-#endif
-
 #ifndef HAVE_PROONGA_CLASS_TABLE
 #   include "classes/table.h"
+#endif
+
+#ifndef HAVE_PROONGA_CLASS_DELETE
+#   include "classes/delete.h"
 #endif
 
 #ifndef HAVE_PROONGA_CLASS_LOAD
@@ -258,6 +259,5 @@ PHP_MINFO_FUNCTION(groonga)
 #ifndef HAVE_PROONGA_CLASS_SELECT
 #   include "classes/select.h"
 #endif
-
 
 #endif      // #ifndef HAVE_PHP_PROONGA

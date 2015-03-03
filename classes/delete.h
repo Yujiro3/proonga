@@ -131,7 +131,7 @@ PHP_METHOD(GDelete, __construct)
         RETURN_FALSE;
     }
 
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "table", Z_STRVAL(grn_p->name))) {
+    if (!prn_command_set(self->ctx, &self->command, "table", Z_STRVAL(grn_p->name))) {
         zend_throw_exception(groonga_exception_ce, "Unable to initialize of delete.", 0 TSRMLS_CC);
         RETURN_FALSE;
     }
@@ -149,7 +149,7 @@ PHP_METHOD(GDelete, __destruct)
 
     self = (groonga_delete_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
-    PRN_COMMAND_UNLINK(self->ctx, &self->command);
+    prn_command_unlink(self->ctx, &self->command);
 }
 
 /**
@@ -173,7 +173,7 @@ PHP_METHOD(GDelete, __set)
     self = (groonga_delete_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, key, value)) {
+    if (!prn_command_set(self->ctx, &self->command, key, value)) {
         RETURN_FALSE;
     }
     
@@ -191,6 +191,7 @@ PHP_METHOD(GDelete, __set)
 PHP_METHOD(GDelete, __get)
 {
     groonga_delete_t *self;
+    zval *retval;
     char *key;
     uint key_len;
 
@@ -201,11 +202,11 @@ PHP_METHOD(GDelete, __get)
     self = (groonga_delete_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_GET(self->ctx, &self->command, key, return_value)) {
+    if (!prn_command_get(self->ctx, &self->command, key, (zval **)&retval)) {
         RETURN_FALSE;
     }
     
-    return;
+    RETURN_ZVAL(retval, 1, 1);
 }
 
 /**
@@ -228,7 +229,7 @@ PHP_METHOD(GDelete, key)
     self = (groonga_delete_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "key", value)) {
+    if (!prn_command_set(self->ctx, &self->command, "key", value)) {
         RETURN_FALSE;
     }
 
@@ -255,7 +256,7 @@ PHP_METHOD(GDelete, id)
     self = (groonga_delete_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "id", value)) {
+    if (!prn_command_set(self->ctx, &self->command, "id", value)) {
         RETURN_FALSE;
     }
 
@@ -282,7 +283,7 @@ PHP_METHOD(GDelete, filter)
     self = (groonga_delete_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* 変数の設定 */
-    if (!PRN_COMMAND_SET(self->ctx, &self->command, "filter", value)) {
+    if (!prn_command_set(self->ctx, &self->command, "filter", value)) {
         RETURN_FALSE;
     }
 
@@ -301,7 +302,8 @@ PHP_METHOD(GDelete, exec)
     groonga_delete_t *self;
     grn_ctx_info info;
     zend_bool assoc = 0;
-    zval retval;
+    zval *retval;
+    int result;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|b", &assoc) == FAILURE) {
         RETURN_FALSE;
@@ -309,12 +311,14 @@ PHP_METHOD(GDelete, exec)
     self = (groonga_delete_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     /* コマンドの実行 */
-    if (!PRN_COMMAND_EXEC(self->ctx, &self->command, &retval, 0)) {
+    if (!prn_command_exec(self->ctx, &self->command, 0, (zval **)&retval)) {
         RETURN_FALSE;
     }
 
     /* 結果の判定 */
-    if (!strcmp("true", Z_STRVAL(retval))) {
+    result = (strncasecmp(Z_STRVAL_P(retval), "true", 4) == 0);
+    zval_ptr_dtor(&retval);
+    if (!result) {
         RETURN_FALSE;    
     }
 
