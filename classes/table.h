@@ -458,7 +458,7 @@ PHP_METHOD(GTable, load)
     }
 
     /* オブジェクトを生成して初期化 */
-    MAKE_STD_ZVAL(zload);
+    ALLOC_INIT_ZVAL(zload);
     object_init_ex(zload, groonga_load_ce);
 
     /* $load->__construct($this) */
@@ -493,7 +493,7 @@ PHP_METHOD(GTable, delete)
     }
 
     /* オブジェクトを生成して初期化 */
-    MAKE_STD_ZVAL(zdelete);
+    ALLOC_INIT_ZVAL(zdelete);
     object_init_ex(zdelete, groonga_delete_ce);
 
     /* $delete->__construct($this) */
@@ -522,7 +522,7 @@ PHP_METHOD(GTable, column)
     }
 
     /* オブジェクトを生成して初期化 */
-    MAKE_STD_ZVAL(zcolumn);
+    ALLOC_INIT_ZVAL(zcolumn);
     object_init_ex(zcolumn, groonga_column_ce);
 
     /* $column->__construct($this, $name) */
@@ -550,7 +550,7 @@ PHP_METHOD(GTable, select)
     }
 
     /* オブジェクトを生成して初期化 */
-    MAKE_STD_ZVAL(zselect);
+    ALLOC_INIT_ZVAL(zselect);
     object_init_ex(zselect, groonga_select_ce);
 
     /* $select->__construct($this) */

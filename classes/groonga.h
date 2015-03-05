@@ -261,7 +261,7 @@ PHP_METHOD(Groonga, command)
     }
 
     /* オブジェクトを生成して初期化 */
-    MAKE_STD_ZVAL(zcommand);
+    ALLOC_INIT_ZVAL(zcommand);
     object_init_ex(zcommand, groonga_command_ce);
 
     /* $command->__construct($this, $cmd_name) */
@@ -441,7 +441,7 @@ PHP_METHOD(Groonga, table)
     }
 
     /* オブジェクトを生成して初期化 */
-    MAKE_STD_ZVAL(ztable);
+    ALLOC_INIT_ZVAL(ztable);
     object_init_ex(ztable, groonga_table_ce);
 
     /* $table->__construct($this, $name) */

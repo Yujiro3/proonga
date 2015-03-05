@@ -61,4 +61,7 @@ $result = $select->exec(1);
 
 echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_BIGINT_AS_STRING);
 
+unset($result[0][0]);
+unset($result[0][1]);
+print_r($result[0]);
 

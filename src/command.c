@@ -55,6 +55,7 @@
  */
 int prngqtp_command(prn_cmd *cmd, const char *name TSRMLS_DC)
 {
+    cmd->command = NULL;
     cmd->cmdname = (char *)emalloc(strlen(name) + 1);
     strcpy(cmd->cmdname, name);
 
@@ -158,6 +159,9 @@ int prngqtp_command_exec(grn_ctx *ctx, prn_cmd *cmd, int assoc, zval **retval_pp
  */
 int proonga_command(grn_ctx *ctx, prn_cmd *cmd, const char *name TSRMLS_DC)
 {
+    cmd->zparam  = NULL;
+    cmd->cmdname = NULL;
+
     cmd->command = grn_ctx_get(ctx, name, strlen(name));
     if (NULL == cmd->command) {
         return 0;
@@ -372,10 +376,13 @@ int prn_command_unlink(grn_ctx *ctx, prn_cmd *cmd)
         }
         if (NULL != cmd->cmdname) {
             efree(cmd->cmdname);
+            cmd->cmdname = NULL;
         }
     } else {
-        grn_obj_unlink(ctx, cmd->command);
-        cmd->command = NULL;
+        if (NULL != cmd->command) {
+            grn_obj_unlink(ctx, cmd->command);
+            cmd->command = NULL;
+        }
     }
     return 1;
 }

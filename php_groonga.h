@@ -40,7 +40,7 @@
 #define GEO_POINT_SEPARATOR         "x"
 #define JSON_PARSER_GROONGA_DEPTH   512
 
-#define PHP_GROONGA_VERSION "0.1.0" /* Replace with version number for your extension */
+#define PHP_GROONGA_VERSION "0.2.0" /* Replace with version number for your extension */
 
 #ifdef PHP_WIN32
 #   define PHP_GROONGA_API __declspec(dllexport)

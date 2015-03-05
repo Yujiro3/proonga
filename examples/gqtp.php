@@ -44,9 +44,9 @@ $result = $gdb->status();
 print_r($result);
 echo "\n-----------\n";
 
-
 echo '/_/_/_/_ table_list _/_/_/_/'."\n";
 $result = $gdb->tableList();
 print_r($result);
 echo "\n-----------\n";
+
 
