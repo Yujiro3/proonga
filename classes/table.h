@@ -41,7 +41,7 @@ typedef struct {
     zend_object std;
     grn_ctx *ctx;
     prn_cmd command;
-    zval name;
+    char *name;
 } groonga_table_t;
 
 /**
@@ -165,7 +165,8 @@ PHP_METHOD(GTable, __construct)
     self->ctx = grn_p->ctx;
 
     /* テーブル名をセット */
-    ZVAL_STRINGL(&self->name, name, name_len, 0);
+    self->name = (char *)emalloc(sizeof(name));
+    strcpy(self->name, name);
 
     /* Groonga組み込みコマンドの取得 */
     if (!prn_command(self->ctx, &self->command, "table_create")) {
@@ -174,7 +175,7 @@ PHP_METHOD(GTable, __construct)
     }
 
     /* 変数へ文字列を設定 */
-    if (!prn_command_set(self->ctx, &self->command, "name", Z_STRVAL(self->name))) {
+    if (!prn_command_set(self->ctx, &self->command, "name", self->name)) {
         zend_throw_exception(groonga_exception_ce, "Unable to initialize of table.", 0 TSRMLS_CC);
         RETURN_FALSE;
     }
@@ -193,6 +194,7 @@ PHP_METHOD(GTable, __destruct)
     self = (groonga_table_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     prn_command_unlink(self->ctx, &self->command);
+    efree(self->name);
 }
 
 /**
@@ -619,7 +621,7 @@ PHP_METHOD(GTable, remove)
     }
 
     /* テーブル名を設定 */
-    if (!prn_command_set(self->ctx, &command, "name", Z_STRVAL(self->name))) {
+    if (!prn_command_set(self->ctx, &command, "name", self->name)) {
         RETURN_FALSE;
     }
 
@@ -669,7 +671,7 @@ PHP_METHOD(GTable, rename)
     }
 
     /* テーブル名を設定 */
-    if (!prn_command_set(self->ctx, &command, "name", Z_STRVAL(self->name))) {
+    if (!prn_command_set(self->ctx, &command, "name", self->name)) {
         RETURN_FALSE;
     }
 
@@ -694,7 +696,8 @@ PHP_METHOD(GTable, rename)
     }
 
     /* テーブル名の変更 */
-    ZVAL_STRINGL(&self->name, name, name_len, 0);
+    self->name = (char *) erealloc(self->name, sizeof(name));
+    strcpy(self->name, name);
 
     RETURN_CHAIN();
 }
@@ -724,7 +727,7 @@ PHP_METHOD(GTable, dump)
     }
 
     /* 変数へ文字列を設定 */
-    if (!prn_command_set(self->ctx, &command, "tables", Z_STRVAL(self->name))) {
+    if (!prn_command_set(self->ctx, &command, "tables", self->name)) {
         RETURN_FALSE;
     }
 
@@ -765,7 +768,7 @@ PHP_METHOD(GTable, truncate)
     }
 
     /* 変数へ文字列を設定 */
-    if (!prn_command_set(self->ctx, &command, "table", Z_STRVAL(self->name))) {
+    if (!prn_command_set(self->ctx, &command, "table", self->name)) {
         RETURN_FALSE;
     }
 
@@ -812,7 +815,7 @@ PHP_METHOD(GTable, columnList)
     }
 
     /* 変数へ文字列を設定 */
-    if (!prn_command_set(self->ctx, &command, "table", Z_STRVAL(self->name))) {
+    if (!prn_command_set(self->ctx, &command, "table", self->name)) {
         RETURN_FALSE;
     }
 

@@ -41,8 +41,8 @@ typedef struct {
     zend_object std;
     grn_ctx *ctx;
     prn_cmd command;
-    zval table;
-    zval name;
+    char *table;
+    char *name;
 } groonga_column_t;
 
 /**
@@ -134,10 +134,11 @@ PHP_METHOD(GColumn, __construct)
     self->ctx = grn_p->ctx;
 
     /* テーブル名をセット */
-    ZVAL_STRINGL(&self->table, Z_STRVAL(grn_p->name), Z_STRLEN(grn_p->name), 0);
+    self->table = grn_p->name;
 
     /* カラム名をセット */
-    ZVAL_STRINGL(&self->name, name, name_len, 0);
+    self->name = (char *)emalloc(sizeof(name));
+    strcpy(self->name, name);
 
     /* Groonga組み込みコマンドの取得 */
     if (!prn_command(self->ctx, &self->command, "column_create")) {
@@ -145,12 +146,12 @@ PHP_METHOD(GColumn, __construct)
         RETURN_FALSE;
     }
 
-    if (!prn_command_set(self->ctx, &self->command, "table", Z_STRVAL(self->table))) {
+    if (!prn_command_set(self->ctx, &self->command, "table", self->table)) {
         zend_throw_exception(groonga_exception_ce, "Unable to initialize of column.", 0 TSRMLS_CC);
         RETURN_FALSE;
     }
 
-    if (!prn_command_set(self->ctx, &self->command, "name", Z_STRVAL(self->name))) {
+    if (!prn_command_set(self->ctx, &self->command, "name", self->name)) {
         zend_throw_exception(groonga_exception_ce, "Unable to initialize of column.", 0 TSRMLS_CC);
         RETURN_FALSE;
     }
@@ -169,6 +170,8 @@ PHP_METHOD(GColumn, __destruct)
     self = (groonga_column_t *) zend_object_store_get_object(getThis() TSRMLS_CC);
 
     prn_command_unlink(self->ctx, &self->command);
+
+    efree(self->name);
 }
 
 /**
@@ -368,12 +371,12 @@ PHP_METHOD(GColumn, remove)
     }
 
     /* テーブル名を設定 */
-    if (!prn_command_set(self->ctx, &command, "table", Z_STRVAL(self->table))) {
+    if (!prn_command_set(self->ctx, &command, "table", self->table)) {
         RETURN_FALSE;
     }
 
     /* カラム名を設定 */
-    if (!prn_command_set(self->ctx, &command, "name", Z_STRVAL(self->name))) {
+    if (!prn_command_set(self->ctx, &command, "name", self->name)) {
         RETURN_FALSE;
     }
 
@@ -422,12 +425,12 @@ PHP_METHOD(GColumn, rename)
     }
 
     /* テーブル名を設定 */
-    if (!prn_command_set(self->ctx, &command, "table", Z_STRVAL(self->table))) {
+    if (!prn_command_set(self->ctx, &command, "table", self->table)) {
         RETURN_FALSE;
     }
 
     /* カラム名を設定 */
-    if (!prn_command_set(self->ctx, &command, "name", Z_STRVAL(self->name))) {
+    if (!prn_command_set(self->ctx, &command, "name", self->name)) {
         RETURN_FALSE;
     }
 
@@ -452,7 +455,8 @@ PHP_METHOD(GColumn, rename)
     }
 
     /* テーブル名の変更 */
-    ZVAL_STRINGL(&self->name, name, name_len, 1);
+    self->name = (char *) erealloc(self->name, sizeof(name));
+    strcpy(self->name, name);
 
     RETURN_CHAIN();
 }

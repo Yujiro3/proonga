@@ -131,7 +131,7 @@ PHP_METHOD(GDelete, __construct)
         RETURN_FALSE;
     }
 
-    if (!prn_command_set(self->ctx, &self->command, "table", Z_STRVAL(grn_p->name))) {
+    if (!prn_command_set(self->ctx, &self->command, "table", grn_p->name)) {
         zend_throw_exception(groonga_exception_ce, "Unable to initialize of delete.", 0 TSRMLS_CC);
         RETURN_FALSE;
     }
