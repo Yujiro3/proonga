@@ -469,10 +469,17 @@ PHP_METHOD(GTable, load)
     if (NULL != zvalues) {
         /* $load->values($values) */
         CALL_METHOD1(GLoad, values, &retval, zload, zvalues);
+        if (!zend_is_true(&retval)) {
+            RETURN_FALSE;
+        }
 
         /* $load->exec() */
         CALL_METHOD(GLoad, exec, &retval, zload);
-    }
+        if (!zend_is_true(&retval)) {
+            RETURN_FALSE;
+        }
+        RETURN_ZVAL(&retval, 1, 0);
+    } // if (NULL != zvalues)
 
     /* 返り値へオブジェクトを渡す */
     RETURN_ZVAL(zload, 1, 1);

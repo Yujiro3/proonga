@@ -412,14 +412,7 @@ PHP_METHOD(GLoad, exec)
         RETURN_FALSE;
     }
 
-    /* 結果の判定 */
-    result = (strncasecmp(Z_STRVAL_P(retval), "true", 4) == 0);
-    zval_ptr_dtor(&retval);
-    if (!result) {
-        RETURN_FALSE;    
-    }
-
-    RETURN_CHAIN();
+    RETURN_ZVAL(retval, 1, 1);
 }
 
 #   endif       /* #ifndef HAVE_PROONGA_CLASS_LOAD */
