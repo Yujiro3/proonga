@@ -2,6 +2,8 @@ Groongaクライアント
 ======================
 PHP bindings for Groonga.
 
+[PHP7 Groonga Client](https://github.com/YujiroTakahashi/proonga)
+
 利用方法
 ------
 
